@@ -3,6 +3,7 @@ using UnityEngine;
 public class PreyController : AgentController
 {
     private bool chased;
+    [SerializeField] private GameObject preyPrefab;
 
     void Start()
     {
@@ -12,5 +13,10 @@ public class PreyController : AgentController
     public bool IsChased()
     {
         return chased;
+    }
+
+    public override GameObject GetPrefab()
+    {
+        return preyPrefab; 
     }
 }

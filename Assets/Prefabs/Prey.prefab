@@ -155,11 +155,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bfe4436eb4363942b91c2f54c6e1c66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hunger: 0
+  thirst: 0
+  energy: 0
   hungerDecreaseRate: 5
   thirstDecreaseRate: 5
   energyDecreaseRate: 5
   hungerThreshold: 30
   thirstThreshold: 30
+  <sex>k__BackingField: 0
+  canMate: 0
+  rotationSpeed: 1
+  preyPrefab: {fileID: 3242333879622623999}
 --- !u!114 &6819428588868809381
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -210,11 +217,16 @@ MonoBehaviour:
   angle: 85
   targetMask:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 704
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
-  visibleTargets: []
+  visibleFood: []
+  visiblePrey: []
+  visiblePredators: []
+  foodInViewRadius: []
+  preyInViewRadius: []
+  predatorsInViewRadius: []
 --- !u!1 &3721554251693244064
 GameObject:
   m_ObjectHideFlags: 0

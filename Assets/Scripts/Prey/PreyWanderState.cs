@@ -12,7 +12,7 @@ class PreyWanderState : BaseState<PreyStateMachine.PreyState>
 
     public override void EnterState()
     {
-        Debug.Log("Entering Wander State");
+        // Debug.Log("Entering Wander State");
     }
 
     public override void UpdateState()
@@ -26,7 +26,7 @@ class PreyWanderState : BaseState<PreyStateMachine.PreyState>
 
     public override void ExitState()
     {
-        Debug.Log("Exiting Wandering State");
+        // Debug.Log("Exiting Wandering State");
     }
 
 }

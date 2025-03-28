@@ -1,3 +1,4 @@
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class PreyStateMachine : StateMachine<PreyStateMachine.PreyState>
@@ -7,6 +8,7 @@ public class PreyStateMachine : StateMachine<PreyStateMachine.PreyState>
         Flee,
         Hungry,
         Thirsty,
+        SearchForMate,
         Mate,
         Wander
     }
@@ -15,6 +17,8 @@ public class PreyStateMachine : StateMachine<PreyStateMachine.PreyState>
 
     PreyHungryState preyHungryState;
     PreyWanderState preyWanderState;
+    PreySearchForMateState preySearchForMateState;
+    PreyMateState preyMateState;
 
     private void Awake()
     {
@@ -22,31 +26,39 @@ public class PreyStateMachine : StateMachine<PreyStateMachine.PreyState>
 
         preyWanderState = new PreyWanderState(preyController);
         preyHungryState = new PreyHungryState(preyController);
+        preySearchForMateState = new PreySearchForMateState(preyController);
+        preyMateState = new PreyMateState(preyController);
 
         states.Add(PreyState.Hungry, preyHungryState);
         states.Add(PreyState.Wander, preyWanderState);
+        states.Add(PreyState.SearchForMate, preySearchForMateState);
+        states.Add(PreyState.Mate, preyMateState);
 
-        //todo base initial state from randomise stats, 
-        currentState = states[PreyState.Wander];
+        currentState = states[GetNextState()];
     }
 
     protected override PreyState GetNextState()
     {
         if (preyController.IsChased())
         {
+            //todo cancel any mating in progress
             return PreyState.Flee;
         }
-        if (preyController.IsHungry())
+        else if (preyController.FoundMate())
+        {
+            return PreyState.Mate;
+        }
+        else if (preyController.IsHungry())
         {
             return PreyState.Hungry;
         }
-        if (preyController.IsThirsty())
+        else if (preyController.IsThirsty())
         {
             return PreyState.Thirsty;
         }
-        if (preyController.CanMate())
+        else if (preyController.CanMate() && preyController.IsMale())
         {
-            return PreyState.Mate;
+            return PreyState.SearchForMate;
         }
 
         return PreyState.Wander;

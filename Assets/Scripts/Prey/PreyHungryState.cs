@@ -12,7 +12,7 @@ class PreyHungryState : BaseState<PreyStateMachine.PreyState>
 
     public override void EnterState()
     {
-        Debug.Log("Entering Hungry State");
+        // Debug.Log("Entering Hungry State");
     }
 
     public override void UpdateState()
@@ -44,7 +44,7 @@ class PreyHungryState : BaseState<PreyStateMachine.PreyState>
 
     public override void ExitState()
     {
-        Debug.Log("Exiting Hungry State");
+        // Debug.Log("Exiting Hungry State");
     }
 
 }

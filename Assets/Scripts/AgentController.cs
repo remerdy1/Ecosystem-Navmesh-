@@ -1,8 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UIElements;
+using Quaternion = UnityEngine.Quaternion;
 using Random = UnityEngine.Random;
+using Vector3 = UnityEngine.Vector3;
 
 public abstract class AgentController : MonoBehaviour
 {
@@ -18,22 +24,23 @@ public abstract class AgentController : MonoBehaviour
     }
 
     // Stats
-    [SerializeField] protected float hunger;
-    [SerializeField] protected float thirst;
-    [SerializeField] protected float energy;
+    [field: SerializeField] protected float hunger;
+    [field: SerializeField] protected float thirst;
+    [field: SerializeField] protected float energy;
 
-    [SerializeField] protected float hungerDecreaseRate;
-    [SerializeField] protected float thirstDecreaseRate;
-    [SerializeField] protected float energyDecreaseRate;
+    [field: SerializeField] protected float hungerDecreaseRate;
+    [field: SerializeField] protected float thirstDecreaseRate;
+    [field: SerializeField] protected float energyDecreaseRate;
 
-    [SerializeField] protected float hungerThreshold;
-    [SerializeField] protected float thirstThreshold;
+    [field: SerializeField] protected float hungerThreshold;
+    [field: SerializeField] protected float thirstThreshold;
 
-    [SerializeField] public Esex sex { get; private set; }
-    [SerializeField] public int attractiveness { get; private set; }
-    [SerializeField] protected bool canMate;
+    [field: SerializeField] public Esex sex { get; private set; }
+    [field: SerializeField] public int attractiveness { get; private set; }
+    [field: SerializeField] protected bool canMate;
+    [field: SerializeField] protected Transform mate;
 
-    [SerializeField] protected float rotationSpeed = 1f;
+    [field: SerializeField] protected float rotationSpeed = 1f;
 
     //todo
     //todo Speed
@@ -42,6 +49,9 @@ public abstract class AgentController : MonoBehaviour
 
     // Movement
     public float movementRange { get; protected set; }
+
+
+    public abstract GameObject GetPrefab();
 
     void Awake()
     {
@@ -57,9 +67,10 @@ public abstract class AgentController : MonoBehaviour
         thirst = Random.Range(hungerThreshold, 100);
         energy = Random.Range(hungerThreshold, 100);
 
-        sex = (Esex)Random.Range(0, 1);
-        attractiveness = Random.Range(1, 10);
-        canMate = false;
+        sex = (Esex)Random.Range(0, 2);
+        attractiveness = Random.Range(1, 11);
+        canMate = true;
+        mate = null;
 
         hungerDecreaseRate = 5f;
         thirstDecreaseRate = 5f;
@@ -81,6 +92,21 @@ public abstract class AgentController : MonoBehaviour
         return canMate;
     }
 
+    public bool FoundMate()
+    {
+        return mate != null;
+    }
+
+    public void SetMate(Transform mate)
+    {
+        this.mate = mate;
+    }
+
+    public Transform GetMate()
+    {
+        return mate;
+    }
+
     public void MoveToRandomPosition()
     {
         Vector3 newPosition = GetRandomPosition(transform.position, movementRange);
@@ -91,9 +117,16 @@ public abstract class AgentController : MonoBehaviour
 
     public void MoveToTarget(Transform target)
     {
-        Debug.Log($"Moving to {target.position}");
+        // Debug.Log($"Moving to {target.position}");
         Debug.DrawRay(target.position, Vector3.up, Color.green, 1f);
         navMeshAgent.SetDestination(target.position);
+    }
+
+    public void MoveToPosition(Vector3 position)
+    {
+        // Debug.Log($"Moving to {position}");
+        Debug.DrawRay(position, Vector3.up, Color.green, 1f);
+        navMeshAgent.SetDestination(position);
     }
 
     public void ResetPath()
@@ -111,6 +144,16 @@ public abstract class AgentController : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
     }
 
+    public void RotateTowardPosition(Vector3 position)
+    {
+        Vector3 directionToTarget = (position - transform.position).normalized;
+        directionToTarget.y = 0;
+
+        Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
+
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+    }
+
     public bool AtTarget()
     {
         return navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance;
@@ -121,41 +164,70 @@ public abstract class AgentController : MonoBehaviour
         return Vector3.Distance(target.position, transform.position);
     }
 
-    public Transform FindPotentialMate()
+    public IEnumerator MateRequest(AgentController other, Action<bool> onComplete)
     {
-        List<Transform> preyInViewRadius = fov.preyInViewRadius;
+        onComplete(true);
+        yield break;
 
-        foreach (Transform other in preyInViewRadius)
+        Debug.Log("Request Reveived");
+
+        // thinking...
+        yield return new WaitForSeconds(3f);
+
+        if (IsMale() || !canMate)
         {
-            AgentController otherController = other.GetComponent<AgentController>();
+            onComplete(false);
+            yield break;
+        }
 
-            if (otherController.sex != sex && canMate && otherController.canMate)
+        ResetPath();
+
+        float chance = Math.Max(other.attractiveness * 10, 20);
+        float roll = Random.Range(0, 100);
+
+        onComplete(roll <= chance);
+    }
+
+    public bool IsMale()
+    {
+        return sex == Esex.MALE;
+    }
+
+    public bool IsFemale()
+    {
+        return sex == Esex.FEMALE;
+    }
+
+    public void Mate()
+    {
+        if (sex == Esex.FEMALE)
+        {
+            Vector3 offset = new Vector3(Random.Range(1, 5), 0, Random.Range(1, 5));
+
+            // Make sure the spawn position is on the NavMesh
+            NavMeshHit hit;
+            Vector3 spawnPos = transform.position + offset;
+
+            if (NavMesh.SamplePosition(spawnPos, out hit, 5f, NavMesh.AllAreas))
             {
-                return other;
+                Instantiate(GetPrefab(), hit.position, transform.rotation);
+                Debug.Log("Offspring created!");
             }
             else
             {
-                rejectionList.Add(other);
+                Instantiate(GetPrefab(), transform.position, transform.rotation);
             }
         }
 
-        return null;
+        canMate = false;
+
+        StartCoroutine(ResetCanMate(30f));
     }
 
-    public bool MateRequest(AgentController other)
+    private IEnumerator ResetCanMate(float delay)
     {
-        float chance = Math.Max((other.attractiveness / 10) * 100, 30);
-
-        float roll = Random.Range(0, 100);
-
-        if (roll > chance)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        yield return new WaitForSeconds(delay);
+        canMate = true;
     }
 
     private Vector3 GetRandomPosition(Vector3 currentPosition, float movementRange)
