@@ -12,7 +12,7 @@ public class CameraController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        transform.position = new Vector3(0, 22.5f, -26.5f);
+        transform.position = new Vector3(0, 0, 0);
         rb = GetComponent<Rigidbody>();
     }
 

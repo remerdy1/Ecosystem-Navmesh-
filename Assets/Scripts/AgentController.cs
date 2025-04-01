@@ -1,11 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UIElements;
 using Quaternion = UnityEngine.Quaternion;
 using Random = UnityEngine.Random;
 using Vector3 = UnityEngine.Vector3;
@@ -38,6 +35,7 @@ public abstract class AgentController : MonoBehaviour
     [field: SerializeField] public Esex sex { get; private set; }
     [field: SerializeField] public int attractiveness { get; private set; }
     [field: SerializeField] protected bool canMate;
+    [field: SerializeField] protected float canMateResetTimer;
     [field: SerializeField] protected Transform mate;
 
     [field: SerializeField] protected float rotationSpeed = 1f;
@@ -69,7 +67,8 @@ public abstract class AgentController : MonoBehaviour
 
         sex = (Esex)Random.Range(0, 2);
         attractiveness = Random.Range(1, 11);
-        canMate = true;
+        canMateResetTimer = Random.Range(30, 120);
+        StartCoroutine(ResetCanMate(30)); // Can't mate for the first 30 seconds 
         mate = null;
 
         hungerDecreaseRate = 5f;
@@ -166,13 +165,12 @@ public abstract class AgentController : MonoBehaviour
 
     public IEnumerator MateRequest(AgentController other, Action<bool> onComplete)
     {
-        onComplete(true);
-        yield break;
-
         Debug.Log("Request Reveived");
 
         // thinking...
         yield return new WaitForSeconds(3f);
+
+
 
         if (IsMale() || !canMate)
         {
@@ -182,7 +180,7 @@ public abstract class AgentController : MonoBehaviour
 
         ResetPath();
 
-        float chance = Math.Max(other.attractiveness * 10, 20);
+        float chance = Math.Max(other.attractiveness * 10, 20); // minimum 20% chance to reproduce
         float roll = Random.Range(0, 100);
 
         onComplete(roll <= chance);
@@ -198,7 +196,7 @@ public abstract class AgentController : MonoBehaviour
         return sex == Esex.FEMALE;
     }
 
-    public void Mate()
+    public void Reproduce()
     {
         if (sex == Esex.FEMALE)
         {
@@ -210,23 +208,20 @@ public abstract class AgentController : MonoBehaviour
 
             if (NavMesh.SamplePosition(spawnPos, out hit, 5f, NavMesh.AllAreas))
             {
-                Instantiate(GetPrefab(), hit.position, transform.rotation);
+                Instantiate(GetPrefab(), hit.position, transform.rotation, transform.parent);
                 Debug.Log("Offspring created!");
             }
             else
             {
-                Instantiate(GetPrefab(), transform.position, transform.rotation);
+                Instantiate(GetPrefab(), transform.position, transform.rotation, transform.parent);
             }
         }
-
-        canMate = false;
-
-        StartCoroutine(ResetCanMate(30f));
     }
 
-    private IEnumerator ResetCanMate(float delay)
+    public IEnumerator ResetCanMate(float time = -1)
     {
-        yield return new WaitForSeconds(delay);
+        canMate = false;
+        yield return new WaitForSeconds(time < 0 ? canMateResetTimer : time);
         canMate = true;
     }
 
@@ -245,6 +240,11 @@ public abstract class AgentController : MonoBehaviour
         }
 
         return Vector3.zero;
+    }
+
+    public bool HasDestination()
+    {
+        return navMeshAgent.hasPath && navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance;
     }
 
     void OnTriggerEnter(Collider other)
