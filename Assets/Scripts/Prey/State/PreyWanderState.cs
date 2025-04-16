@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-class PreyWanderState : BaseState<PreyStateMachine.PreyState>
+class PreyWanderState : AbstractState<PreyStateMachine.PreyState>
 {
     PreyController preyController;
 

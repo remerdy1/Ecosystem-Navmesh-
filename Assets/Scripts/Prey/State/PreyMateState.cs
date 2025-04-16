@@ -2,7 +2,7 @@ using System.IO.Pipes;
 using UnityEngine;
 using UnityEngine.AI;
 
-class PreyMateState : BaseState<PreyStateMachine.PreyState>
+class PreyMateState : AbstractState<PreyStateMachine.PreyState>
 {
     PreyController preyController;
     PreyController mateController;

@@ -1,7 +1,7 @@
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-public class PreyStateMachine : StateMachine<PreyStateMachine.PreyState>
+public class PreyStateMachine : AbstractStateMachine<PreyStateMachine.PreyState>
 {
     public enum PreyState
     {
@@ -19,6 +19,7 @@ public class PreyStateMachine : StateMachine<PreyStateMachine.PreyState>
     PreyWanderState preyWanderState;
     PreySearchForMateState preySearchForMateState;
     PreyMateState preyMateState;
+    PreyThirstyState preyThirstyState;
 
     private void Awake()
     {
@@ -28,11 +29,13 @@ public class PreyStateMachine : StateMachine<PreyStateMachine.PreyState>
         preyHungryState = new PreyHungryState(preyController);
         preySearchForMateState = new PreySearchForMateState(preyController);
         preyMateState = new PreyMateState(preyController);
+        preyThirstyState = new PreyThirstyState(preyController);
 
         states.Add(PreyState.Hungry, preyHungryState);
         states.Add(PreyState.Wander, preyWanderState);
         states.Add(PreyState.SearchForMate, preySearchForMateState);
         states.Add(PreyState.Mate, preyMateState);
+        states.Add(PreyState.Thirsty, preyThirstyState);
 
         currentState = states[GetNextState()];
     }

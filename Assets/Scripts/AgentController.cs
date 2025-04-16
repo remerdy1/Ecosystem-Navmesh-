@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.AI;
 using Quaternion = UnityEngine.Quaternion;
@@ -13,6 +15,7 @@ public abstract class AgentController : MonoBehaviour
     //todo make private
     public FOV fov { get; protected set; }
     public List<Transform> rejectionList { get; private set; } = new List<Transform>(); //todo forget after x minutes
+    [field: SerializeField] public WaterController waterController;
 
     public enum Esex
     {
@@ -23,11 +26,11 @@ public abstract class AgentController : MonoBehaviour
     // Stats
     [field: SerializeField] protected float hunger;
     [field: SerializeField] protected float thirst;
-    [field: SerializeField] protected float energy;
+    // [field: SerializeField] protected float energy;
 
     [field: SerializeField] protected float hungerDecreaseRate;
     [field: SerializeField] protected float thirstDecreaseRate;
-    [field: SerializeField] protected float energyDecreaseRate;
+    // [field: SerializeField] protected float energyDecreaseRate;
 
     [field: SerializeField] protected float hungerThreshold;
     [field: SerializeField] protected float thirstThreshold;
@@ -56,24 +59,26 @@ public abstract class AgentController : MonoBehaviour
         navMeshAgent = GetComponent<NavMeshAgent>();
         fov = GetComponent<FOV>();
 
-        //todo randomise stats
-        hungerThreshold = 30f;
-        thirstThreshold = 30f;
-        movementRange = 30f;
+        hungerThreshold = Random.Range(30, 51);
+        thirstThreshold = Random.Range(30, 51);
+        movementRange = Random.Range(30, 51);
 
         hunger = Random.Range(hungerThreshold, 100);
         thirst = Random.Range(hungerThreshold, 100);
-        energy = Random.Range(hungerThreshold, 100);
+        // energy = Random.Range(hungerThreshold, 100);
 
         sex = (Esex)Random.Range(0, 2);
         attractiveness = Random.Range(1, 11);
         canMateResetTimer = Random.Range(30, 120);
-        StartCoroutine(ResetCanMate(30)); // Can't mate for the first 30 seconds 
+        StartCoroutine(ResetCanMate(30)); // Can't mate for the first 30 seconds of spawning
         mate = null;
 
-        hungerDecreaseRate = 5f;
-        thirstDecreaseRate = 5f;
-        energyDecreaseRate = 5f;
+        hungerDecreaseRate = GetDecreaseRate();
+        thirstDecreaseRate = GetDecreaseRate();
+        // energyDecreaseRate = GetRandomFloat(0, 1, 0.25f);
+
+        InvokeRepeating("DecrementHunger", 1, 1);
+        InvokeRepeating("DecrementThirst", 1, 1);
     }
 
     public bool IsHungry()
@@ -178,6 +183,8 @@ public abstract class AgentController : MonoBehaviour
             yield break;
         }
 
+        onComplete(true);
+        yield break;
         ResetPath();
 
         float chance = Math.Max(other.attractiveness * 10, 20); // minimum 20% chance to reproduce
@@ -242,19 +249,51 @@ public abstract class AgentController : MonoBehaviour
         return Vector3.zero;
     }
 
+    public void GoToClosestWaterEdge()
+    {
+        Vector3 closestPosition = waterController.GetClosestPositionMarker(transform.position);
+        Debug.Log($"Closest Position: {closestPosition}");
+        MoveToPosition(closestPosition);
+    }
+
     public bool HasDestination()
     {
         return navMeshAgent.hasPath && navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance;
     }
 
-    void OnTriggerEnter(Collider other)
+    private float GetDecreaseRate()
     {
-        if (other.tag == "Food")
+        float[] possibleValues = { 0.25f, 0.5f, 0.75f, 1 };
+        return possibleValues[Random.Range(0, possibleValues.Length)];
+    }
+
+    private void DecrementHunger()
+    {
+        hunger -= hungerDecreaseRate;
+    }
+
+    private void DecrementThirst()
+    {
+        thirst -= thirstDecreaseRate;
+    }
+
+    /*     private void DecrementEnergy()
         {
-            hunger += 10; //todo change depending on matabolism
-            fov.foodInViewRadius.Remove(other.gameObject.transform);
-            fov.visibleFood.Remove(other.gameObject.transform);
-            Destroy(other.gameObject);
+            energy -= energyDecreaseRate;
+        } */
+
+
+    float time = 0;
+    void OnTriggerStay(Collider other)
+    {
+        if (other.tag == "Water")
+        {
+            time += Time.deltaTime;
+            if (time >= 1)
+            {
+                thirst = Math.Min(thirst + 10, 100);
+                time = time % 1;
+            }
         }
     }
 }

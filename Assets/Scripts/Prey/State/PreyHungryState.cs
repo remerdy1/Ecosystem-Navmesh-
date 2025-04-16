@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-class PreyHungryState : BaseState<PreyStateMachine.PreyState>
+class PreyHungryState : AbstractState<PreyStateMachine.PreyState>
 {
     PreyController preyController;
 

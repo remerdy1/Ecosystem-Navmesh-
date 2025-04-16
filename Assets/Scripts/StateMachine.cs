@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class StateMachine<EState> : MonoBehaviour where EState : Enum
+public abstract class AbstractStateMachine<EState> : MonoBehaviour where EState : Enum
 {
-    protected Dictionary<EState, BaseState<EState>> states = new Dictionary<EState, BaseState<EState>>();
-    [field: SerializeField] protected BaseState<EState> currentState;
+    protected Dictionary<EState, AbstractState<EState>> states = new Dictionary<EState, AbstractState<EState>>();
+    [field: SerializeField] protected AbstractState<EState> currentState;
 
     protected bool IsTransitioningState = false;
 

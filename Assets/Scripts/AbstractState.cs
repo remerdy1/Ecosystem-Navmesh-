@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
 
-public abstract class BaseState<EState> where EState : Enum
+public abstract class AbstractState<EState> where EState : Enum
 {
     public EState stateKey { get; private set; }
 
-    public BaseState(EState key)
+    public AbstractState(EState key)
     {
         stateKey = key;
     }

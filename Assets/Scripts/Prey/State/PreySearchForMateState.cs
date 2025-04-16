@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-class PreySearchForMateState : BaseState<PreyStateMachine.PreyState>
+class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
 {
     PreyController preyController;
     Transform potentialMate;
