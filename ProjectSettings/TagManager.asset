@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Food
   - Prey
+  - Predator
+  - Water
   layers:
   - Default
   - TransparentFX
@@ -16,7 +18,7 @@ TagManager:
   - Prey
   - Food
   - Obstacles
-  - 
+  - Predator
   - 
   - 
   - 

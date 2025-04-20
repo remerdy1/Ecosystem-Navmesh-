@@ -50,13 +50,13 @@ public class FOV : MonoBehaviour
         preyInViewRadius.Clear();
         predatorsInViewRadius.Clear();
 
-        /* targetInViewRadius = Physics.OverlapSphere(transform.position, radius, targetMask)
-                                    .ToList()
-                                    .ConvertAll(x => x.transform); */
         Collider[] overlap = Physics.OverlapSphere(transform.position, radius, targetMask);
 
         foreach (Collider collider in overlap)
         {
+            if (collider.gameObject == gameObject)
+                continue;
+
             switch (collider.gameObject.tag)
             {
                 case "Food":
@@ -69,7 +69,7 @@ public class FOV : MonoBehaviour
                     predatorsInViewRadius.Add(collider.gameObject.transform);
                     break;
                 default:
-                    return;
+                    continue;
             }
         }
 
@@ -103,7 +103,6 @@ public class FOV : MonoBehaviour
 
         foreach (Transform target in visibleTargets)
         {
-            // find closest food
             float distance = Vector3.Distance(target.position, transform.position);
 
             if (closest.target == null || distance < closest.distance)

@@ -18,16 +18,11 @@ public class Simulation : MonoBehaviour
     [SerializeField] protected GameObject preyObject;
 
     // Plane
-    protected Renderer planeRenderer;
-    protected Vector3 planeSize;
+    [SerializeField] Collider preySpawnArea;
 
     private void Start()
     {
         InvokeRepeating("SpawnFood", 1, 1);
-
-        Transform planeTransform = transform.Find("Plane");
-        planeRenderer = planeTransform.GetComponent<Renderer>();
-
         InitializeSimulation();
     }
 
@@ -114,22 +109,18 @@ public class Simulation : MonoBehaviour
 
 
     /// <summary>
-    /// Returns a valid random position within the plane
+    /// Returns a valid random position within the terrain
     /// </summary>
     /// <param name="y">
     /// The y value of the positon (defaults to 1)
     /// </param>
     public Vector3 GetRandomPosition(float y = 1f)
     {
-        planeSize = planeRenderer.bounds.size;
-
-        float xMin = (-planeSize.x / 2) + 2;
-        float xMax = (planeSize.x / 2) - 2;
-        float zMin = (-planeSize.z / 2) + 2;
-        float zMax = (planeSize.z / 2) - 2;
-
-        // Debug.Log($"xMin: {xMin}, xMax: {xMax}, zMin: {zMin}, zMax: {zMax}");
-
-        return new Vector3(Random.Range(xMin, xMax), y, Random.Range(zMin, zMax));
+        Bounds colliderBounds = preySpawnArea.bounds;
+        return new Vector3(
+            Random.Range(colliderBounds.min.x, colliderBounds.max.x),
+            y,
+            Random.Range(colliderBounds.min.z, colliderBounds.max.z)
+        );
     }
 }

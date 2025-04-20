@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class StateMachine<EState> : MonoBehaviour where EState : Enum
+public abstract class AbstractStateMachine<EState> : MonoBehaviour where EState : Enum
 {
-    protected Dictionary<EState, BaseState<EState>> states = new Dictionary<EState, BaseState<EState>>();
-    protected BaseState<EState> currentState;
+    protected Dictionary<EState, AbstractState<EState>> states = new Dictionary<EState, AbstractState<EState>>();
+    [field: SerializeField] protected AbstractState<EState> currentState;
 
     protected bool IsTransitioningState = false;
 
@@ -17,7 +17,7 @@ public abstract class StateMachine<EState> : MonoBehaviour where EState : Enum
     private void Update()
     {
         EState nextStateKey = GetNextState();
-        Debug.Log($"Next State: {nextStateKey}");
+        // Debug.Log($"Next State Key: {nextStateKey} Current State Key: {currentState.stateKey} Equal: {nextStateKey.Equals(currentState.stateKey)}");
 
         if (nextStateKey.Equals(currentState.stateKey))
         {
@@ -25,7 +25,7 @@ public abstract class StateMachine<EState> : MonoBehaviour where EState : Enum
         }
         else if (!IsTransitioningState)
         {
-            Debug.Log($"Transitioning to {nextStateKey}");
+            // Debug.Log($"Transitioning to {nextStateKey}");
             TransitionToState(nextStateKey);
         }
     }
