@@ -129,17 +129,12 @@ class PreyMateState : AbstractState<PreyStateMachine.PreyState>
         // Only the female gives birth
         if (preyController.sex == AgentController.Esex.FEMALE)
         {
-            preyController.Reproduce();
+            preyController.Reproduce(mateController);
         }
 
-        // Clear the mate reference
         preyController.SetMate(null);
         isMating = false;
 
-        // Force a state transition by moving to a random position
-        preyController.MoveToRandomPosition();
-
-        // Reset can mate with a delay
         preyController.StartCoroutine(preyController.ResetCanMate());
     }
 

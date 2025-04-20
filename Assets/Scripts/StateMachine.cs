@@ -12,6 +12,7 @@ public abstract class AbstractStateMachine<EState> : MonoBehaviour where EState 
     private void Start()
     {
         currentState.EnterState();
+        UpdateStateText(currentState.stateKey.ToString());
     }
 
     private void Update()
@@ -37,7 +38,9 @@ public abstract class AbstractStateMachine<EState> : MonoBehaviour where EState 
         currentState = states[stateKey];
         currentState.EnterState();
         IsTransitioningState = false;
+        UpdateStateText(stateKey.ToString());
     }
 
     protected abstract EState GetNextState();
+    protected abstract void UpdateStateText(string text);
 }
