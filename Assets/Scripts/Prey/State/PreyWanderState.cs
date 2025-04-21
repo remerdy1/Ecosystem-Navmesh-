@@ -12,14 +12,14 @@ class PreyWanderState : AbstractState<PreyStateMachine.PreyState>
 
     public override void EnterState()
     {
-        Debug.Log("Entering Wander State");
+        // Debug.Log("Entering Wander State");
         preyController.ResetPath();
         preyController.MoveToRandomPosition();
     }
 
     public override void UpdateState()
     {
-        Debug.Log($"{preyController.gameObject} is wandering");
+        // Debug.Log($"{preyController.gameObject} is wandering");
         if (preyController.AtTarget())
         {
             preyController.MoveToRandomPosition();
@@ -28,7 +28,7 @@ class PreyWanderState : AbstractState<PreyStateMachine.PreyState>
 
     public override void ExitState()
     {
-        Debug.Log("Exiting Wandering State");
+        // Debug.Log("Exiting Wandering State");
     }
 
 }

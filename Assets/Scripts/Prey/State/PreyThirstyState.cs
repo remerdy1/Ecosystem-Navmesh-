@@ -11,7 +11,7 @@ class PreyThirstyState : AbstractState<PreyStateMachine.PreyState>
 
     public override void EnterState()
     {
-        Debug.Log("Entering Thirsty State");
+        // Debug.Log("Entering Thirsty State");
         preyController.GoToClosestWaterEdge();
     }
 
@@ -21,13 +21,13 @@ class PreyThirstyState : AbstractState<PreyStateMachine.PreyState>
         {
             if (!preyController.IsThirsty())
             {
-                Debug.Log("Drinking...");
+                // Debug.Log("Drinking...");
             }
         }
     }
 
     public override void ExitState()
     {
-        Debug.Log("Exiting Thirsty State");
+        // Debug.Log("Exiting Thirsty State");
     }
 }

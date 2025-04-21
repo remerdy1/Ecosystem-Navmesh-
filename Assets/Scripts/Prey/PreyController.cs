@@ -27,7 +27,6 @@ public class PreyController : AgentController
         {
             hunger = Math.Min(hunger + 10, 100); //todo change depending on matabolism
             fov.foodInViewRadius.Remove(other.gameObject.transform);
-            fov.visibleFood.Remove(other.gameObject.transform);
             Destroy(other.gameObject);
         }
     }

@@ -11,10 +11,6 @@ public class FOV : MonoBehaviour
     public LayerMask targetMask;
     public LayerMask obstacleMask;
 
-    public List<Transform> visibleFood = new List<Transform>();
-    public List<Transform> visiblePrey = new List<Transform>();
-    public List<Transform> visiblePredators = new List<Transform>();
-
     public List<Transform> foodInViewRadius;
     public List<Transform> preyInViewRadius;
     public List<Transform> predatorsInViewRadius;
@@ -42,10 +38,6 @@ public class FOV : MonoBehaviour
 
     void FindVisibleTarget()
     {
-        visibleFood.Clear();
-        visiblePredators.Clear();
-        visiblePrey.Clear();
-
         foodInViewRadius.Clear();
         preyInViewRadius.Clear();
         predatorsInViewRadius.Clear();
@@ -72,46 +64,6 @@ public class FOV : MonoBehaviour
                     continue;
             }
         }
-
-        visibleFood = getVisibleTargets(foodInViewRadius);
-        visiblePrey = getVisibleTargets(preyInViewRadius);
-        visiblePredators = getVisibleTargets(predatorsInViewRadius);
-    }
-
-    public Transform ClosestTargetInView(TargetType targetType)
-    {
-        List<Transform> visibleTargets;
-
-        switch (targetType)
-        {
-            case TargetType.Prey:
-                visibleTargets = visiblePrey;
-                break;
-            case TargetType.Predator:
-                visibleTargets = visiblePredators;
-                break;
-            case TargetType.Food:
-                visibleTargets = visibleFood;
-                break;
-            default:
-                return null;
-        }
-
-        if (visibleTargets.Count == 0) return null;
-
-        (Transform target, float distance) closest = (null, 0);
-
-        foreach (Transform target in visibleTargets)
-        {
-            float distance = Vector3.Distance(target.position, transform.position);
-
-            if (closest.target == null || distance < closest.distance)
-            {
-                closest = (target, distance);
-            }
-        }
-
-        return closest.target;
     }
 
     public Transform ClosestTargetInRadius(TargetType targetType)
@@ -159,30 +111,5 @@ public class FOV : MonoBehaviour
         }
 
         return new Vector3(Mathf.Sin(angleInDegrees * Mathf.Deg2Rad), 0, Mathf.Cos(angleInDegrees * Mathf.Deg2Rad));
-    }
-
-    private List<Transform> getVisibleTargets(List<Transform> inViewRadius)
-    {
-        List<Transform> visibleTargets = new List<Transform>();
-
-        for (int i = 0; i < inViewRadius.Count; i++)
-        {
-            Transform target = inViewRadius[i];
-            Vector3 dirToTarget = (target.position - transform.position).normalized;
-
-            // Check to see if the target is within the viewing range
-            if (Vector3.Angle(transform.forward, dirToTarget) < angle / 2)
-            {
-                float dstToTarget = Vector3.Distance(transform.position, target.position);
-
-                // Check to see if the target is blocked
-                if (!Physics.Raycast(transform.position, dirToTarget, dstToTarget, obstacleMask))
-                {
-                    visibleTargets.Add(target);
-                }
-            }
-        }
-
-        return visibleTargets;
     }
 }

@@ -171,7 +171,9 @@ public abstract class AgentController : MonoBehaviour
 
     public bool AtTarget()
     {
-        return navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance;
+        return !navMeshAgent.pathPending &&
+               navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance &&
+               (!navMeshAgent.hasPath || navMeshAgent.velocity.sqrMagnitude == 0f);
     }
 
     public float DistanceToTarget(Transform target)
@@ -181,7 +183,7 @@ public abstract class AgentController : MonoBehaviour
 
     public IEnumerator MateRequest(AgentController other, Action<bool> onComplete)
     {
-        Debug.Log("Request Reveived");
+        // Debug.Log("Request Reveived");
 
         // thinking...
         yield return new WaitForSeconds(3f);
@@ -245,12 +247,12 @@ public abstract class AgentController : MonoBehaviour
 
         if (roll < totalMutationChance / 2)
         {
-            Debug.Log("Mutate!");
+            // Debug.Log("Mutate!");
             return Mathf.Clamp(stat * Random.Range(1f, mutationStrength), min, max);
         }
         else if (roll < totalMutationChance)
         {
-            Debug.Log("Mutate!");
+            // Debug.Log("Mutate!");
             return Mathf.Clamp(stat / Random.Range(1f, mutationStrength), min, max);
         }
 
@@ -301,13 +303,14 @@ public abstract class AgentController : MonoBehaviour
             }
         }
 
+        // Debug.Log("Valid Path Not Found: Returning Zeroes");
         return Vector3.zero;
     }
 
     public void GoToClosestWaterEdge()
     {
         Vector3 closestPosition = waterController.GetClosestPositionMarker(transform.position);
-        Debug.Log($"Closest Position: {closestPosition}");
+        // Debug.Log($"Closest Position: {closestPosition}");
         MoveToPosition(closestPosition);
     }
 
@@ -337,10 +340,12 @@ public abstract class AgentController : MonoBehaviour
     {
         if (other.tag == "Water")
         {
+            Debug.Log("Entered Water");
+
             time += Time.deltaTime;
             if (time >= 1)
             {
-                thirst = Mathf.Min(thirst + 10, 100);
+                thirst = Mathf.Min(thirst + 4, 100);
                 time = time % 1;
             }
         }

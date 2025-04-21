@@ -45,7 +45,7 @@ class PreyMateState : AbstractState<PreyStateMachine.PreyState>
 
                 preyController.RotateTowardTarget(mateController.transform);
 
-                Debug.Log($"{preyController.gameObject.name} starting mating process");
+                // Debug.Log($"{preyController.gameObject.name} starting mating process");
             }
         }
 
@@ -90,7 +90,7 @@ class PreyMateState : AbstractState<PreyStateMachine.PreyState>
 
     private void CompleteMating()
     {
-        Debug.Log($"{preyController.gameObject.name} completed mating");
+        // Debug.Log($"{preyController.gameObject.name} completed mating");
 
         // Only the female gives birth
         if (preyController.sex == AgentController.Esex.FEMALE)
@@ -106,7 +106,7 @@ class PreyMateState : AbstractState<PreyStateMachine.PreyState>
 
     public override void ExitState()
     {
-        Debug.Log("Exiting Mating State");
+        // Debug.Log("Exiting Mating State");
 
         // Make sure to clear references when exiting
         preyController.SetMate(null);
