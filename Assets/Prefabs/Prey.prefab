@@ -344,6 +344,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   simulation: {fileID: 0}
   waterController: {fileID: 2871137724165834399, guid: fd33361168fa81d4d80fcf6ab8cad1b3, type: 3}
+  maleMaterial: {fileID: 2100000, guid: 3ffc107dbb805f9438688480a934d4a8, type: 2}
+  femaleMaterial: {fileID: 2100000, guid: 33dd673ea8df79447a7efe3031c3c462, type: 2}
   hunger: 0
   thirst: 0
   hungerDecreaseRate: 5

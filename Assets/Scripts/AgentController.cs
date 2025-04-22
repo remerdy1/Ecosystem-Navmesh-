@@ -11,10 +11,11 @@ public abstract class AgentController : MonoBehaviour
 {
     [SerializeField] protected Simulation simulation;
     protected NavMeshAgent navMeshAgent;
-    //todo make private
     public FOV fov { get; protected set; }
     public List<Transform> rejectionList { get; private set; } = new List<Transform>(); //todo forget after x minutes
     [field: SerializeField] public WaterController waterController;
+    [SerializeField] Material maleMaterial;
+    [SerializeField] Material femaleMaterial;
 
     public enum Esex
     {
@@ -25,11 +26,9 @@ public abstract class AgentController : MonoBehaviour
     // Stats
     [field: SerializeField] protected float hunger;
     [field: SerializeField] protected float thirst;
-    // [field: SerializeField] protected float energy;
 
     [field: SerializeField] protected float hungerDecreaseRate;
     [field: SerializeField] protected float thirstDecreaseRate;
-    // [field: SerializeField] protected float energyDecreaseRate;
 
     [field: SerializeField] protected float hungerThreshold;
     [field: SerializeField] protected float thirstThreshold;
@@ -59,6 +58,8 @@ public abstract class AgentController : MonoBehaviour
         thirst = Random.Range(hungerThreshold, 100);
 
         sex = (Esex)Random.Range(0, 2);
+        GetComponent<MeshRenderer>().material = (sex == Esex.FEMALE) ? femaleMaterial : maleMaterial;
+
         attractiveness = Random.Range(0f, 10f);
         canMateResetTimer = Random.Range(30f, 120f);
         StartCoroutine(ResetCanMate(30)); // Can't mate for the first 30 seconds of spawning
