@@ -16,11 +16,6 @@ public class PreyController : AgentController
         return chased;
     }
 
-    public override GameObject GetPrefab()
-    {
-        return preyPrefab;
-    }
-
     void OnTriggerEnter(Collider other)
     {
         if (other.tag == "Food")

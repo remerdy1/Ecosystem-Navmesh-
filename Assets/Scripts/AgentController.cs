@@ -9,6 +9,7 @@ using Vector3 = UnityEngine.Vector3;
 
 public abstract class AgentController : MonoBehaviour
 {
+    [SerializeField] Simulation simulation;
     protected NavMeshAgent navMeshAgent;
     //todo make private
     public FOV fov { get; protected set; }
@@ -51,13 +52,11 @@ public abstract class AgentController : MonoBehaviour
     // Movement
     public float movementRange { get; protected set; }
 
-
-    public abstract GameObject GetPrefab();
-
     void Awake()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
         fov = GetComponent<FOV>();
+        simulation = transform.parent.GetComponent<Simulation>();
 
         hungerThreshold = Random.Range(30f, 50f);
         thirstThreshold = Random.Range(30f, 50f);
@@ -214,7 +213,7 @@ public abstract class AgentController : MonoBehaviour
         return sex == Esex.FEMALE;
     }
 
-    private void Init(AgentController parentOne, AgentController parentTwo)
+    public void Init(AgentController parentOne, AgentController parentTwo)
     {
         // hungerDecreaseRate
         hungerDecreaseRate = Random.value > 0.5 ? parentOne.hungerDecreaseRate : parentTwo.hungerDecreaseRate;
@@ -271,13 +270,11 @@ public abstract class AgentController : MonoBehaviour
 
             if (NavMesh.SamplePosition(spawnPos, out hit, 5f, NavMesh.AllAreas))
             {
-                GameObject offspring = Instantiate(GetPrefab(), hit.position, transform.rotation, transform.parent);
-                offspring.GetComponent<AgentController>().Init(this, mateController);
+                simulation.SpawnPrey(hit.position, this, mateController);
             }
             else
             {
-                GameObject offspring = Instantiate(GetPrefab(), transform.position, transform.rotation, transform.parent);
-                offspring.GetComponent<AgentController>().Init(this, mateController);
+                simulation.SpawnPrey(transform.position, this, mateController);
             }
         }
     }

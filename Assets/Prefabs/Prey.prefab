@@ -342,6 +342,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bfe4436eb4363942b91c2f54c6e1c66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  simulation: {fileID: 0}
   waterController: {fileID: 2871137724165834399, guid: fd33361168fa81d4d80fcf6ab8cad1b3, type: 3}
   hunger: 0
   thirst: 0
@@ -411,9 +412,6 @@ MonoBehaviour:
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
-  visibleFood: []
-  visiblePrey: []
-  visiblePredators: []
   foodInViewRadius: []
   preyInViewRadius: []
   predatorsInViewRadius: []

@@ -4,9 +4,9 @@ using TMPro;
 
 public class StartMenu : MonoBehaviour
 {
-    [SerializeField] string defaultInitialFood = "10";
+    [SerializeField] string defaultInitialFood = "7";
     [SerializeField] string defaultMaxPrey = "50";
-    [SerializeField] string defaultInitialPrey = "7";
+    [SerializeField] string defaultInitialPrey = "10";
     [SerializeField] string defaultMaxFood = "100";
 
     [SerializeField] Simulation simulation;

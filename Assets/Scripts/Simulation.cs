@@ -9,14 +9,14 @@ public class Simulation : MonoBehaviour
     // Food
     [SerializeField, ReadOnly] protected List<GameObject> spawnedFood;
     protected int initialFoodCount;
-    protected int maxFoodCount = -1;
+    protected int maxFoodCount;
     [SerializeField] protected GameObject foodObject;
     protected int foodPerSecond;
 
     // Prey
     [SerializeField, ReadOnly] protected List<GameObject> spawnedPrey;
     protected int initalPreyCount;
-    protected int maxPreyCount = -1;
+    protected int maxPreyCount;
     [SerializeField] protected GameObject preyObject;
 
     // Plane
@@ -28,6 +28,9 @@ public class Simulation : MonoBehaviour
 
     private void Start()
     {
+        spawnedFood = new List<GameObject>();
+        spawnedPrey = new List<GameObject>();
+
         startMenu.enabled = true;
         overlay.enabled = false;
         cameraController.LockCamera();
@@ -37,7 +40,7 @@ public class Simulation : MonoBehaviour
     {
         this.initalPreyCount = initalPreyCount;
         this.maxPreyCount = maxPreyCount;
-        this.initalPreyCount = initialFoodCount;
+        this.initialFoodCount = initialFoodCount;
         this.maxFoodCount = maxFoodCount;
         this.foodPerSecond = foodPerSecond;
     }
@@ -58,16 +61,24 @@ public class Simulation : MonoBehaviour
         return spawnedPrey.Count;
     }
 
-    public void SpawnPrey(Vector3 localPosition)
+    public void SpawnPrey(Vector3 localPosition, AgentController parentOne = null, AgentController parentTwo = null)
     {
-        GameObject prey = Instantiate(preyObject, gameObject.transform);
-        spawnedPrey.Add(prey);
-        prey.transform.localPosition = localPosition;
+        if (spawnedPrey.Count < maxPreyCount)
+        {
+            GameObject prey = Instantiate(preyObject, transform);
+            prey.transform.localPosition = localPosition;
+            spawnedPrey.Add(prey);
+
+            if (parentOne != null && parentTwo != null)
+            {
+                prey.GetComponent<AgentController>().Init(parentOne, parentTwo);
+            }
+        }
     }
 
     public int GetMaxPreyCount()
     {
-        return this.maxPreyCount;
+        return maxPreyCount;
     }
 
     public void DestroyPrey(GameObject prey)
@@ -90,7 +101,7 @@ public class Simulation : MonoBehaviour
 
 
         // Spawn initial prey
-        for (int i = 0; i < initalPreyCount && (GetCurrentPreyCount() < maxPreyCount || maxPreyCount < 1); i++)
+        for (int i = 0; i < initalPreyCount && (GetCurrentPreyCount() < maxPreyCount || maxPreyCount < 0); i++)
         {
             SpawnPrey(GetRandomPosition());
         }
