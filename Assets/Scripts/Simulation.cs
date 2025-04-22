@@ -140,6 +140,13 @@ public class Simulation : MonoBehaviour
             float x = Random.Range(0, 300);
             float z = Random.Range(0, 300);
 
+            // We don't want positions inside of the "Water Area"
+            if (z >= 100 && z <= 150) z = Random.Range(0, 100);
+            else if (z > 150 && z <= 200) z = Random.Range(201, 300);
+
+            if (y >= 100 && y <= 150) y = Random.Range(0, 100);
+            else if (y > 150 && y <= 200) y = Random.Range(201, 300);
+
             Vector3 randomPos = new Vector3(x, y, z);
             NavMeshHit hit;
 

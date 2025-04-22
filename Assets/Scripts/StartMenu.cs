@@ -5,9 +5,9 @@ using TMPro;
 public class StartMenu : MonoBehaviour
 {
     string defaultInitialFood = "100";
-    int defaultFoodPerSecond = 10;
+    int defaultFoodPerSecond = 7;
     string defaultMaxPrey = "50";
-    string defaultInitialPrey = "15";
+    string defaultInitialPrey = "10";
     string defaultMaxFood = "500";
 
     [SerializeField] Simulation simulation;

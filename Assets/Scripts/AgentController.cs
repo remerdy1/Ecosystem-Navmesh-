@@ -9,7 +9,7 @@ using Vector3 = UnityEngine.Vector3;
 
 public abstract class AgentController : MonoBehaviour
 {
-    [SerializeField] Simulation simulation;
+    [SerializeField] protected Simulation simulation;
     protected NavMeshAgent navMeshAgent;
     //todo make private
     public FOV fov { get; protected set; }
@@ -46,12 +46,6 @@ public abstract class AgentController : MonoBehaviour
     // UI
     [field: SerializeField] protected AgentUIController agentUI;
 
-    //todo
-    //todo Field Of View
-
-    // Movement
-    public float movementRange { get; protected set; }
-
     void Awake()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
@@ -60,7 +54,6 @@ public abstract class AgentController : MonoBehaviour
 
         hungerThreshold = Random.Range(30f, 50f);
         thirstThreshold = Random.Range(30f, 50f);
-        movementRange = Random.Range(30f, 50f);
 
         hunger = Random.Range(hungerThreshold, 100);
         thirst = Random.Range(hungerThreshold, 100);
@@ -71,15 +64,43 @@ public abstract class AgentController : MonoBehaviour
         StartCoroutine(ResetCanMate(30)); // Can't mate for the first 30 seconds of spawning
         mate = null;
 
-        hungerDecreaseRate = GetDecreaseRate();
-        thirstDecreaseRate = GetDecreaseRate();
+        hungerDecreaseRate = Random.Range(0, 1f);
+        thirstDecreaseRate = Random.Range(0, 1f);
 
         InvokeRepeating("DecrementHunger", 1, 1);
         InvokeRepeating("DecrementThirst", 1, 1);
 
-        navMeshAgent.speed = Random.Range(2, 5); //todo 
+        navMeshAgent.speed = Random.Range(2, 5f); //todo 
+        fov.radius = Random.Range(13, 30f);
     }
 
+    public void Init(AgentController parentOne, AgentController parentTwo)
+    {
+        // hungerDecreaseRate
+        hungerDecreaseRate = Random.value > 0.5 ? parentOne.hungerDecreaseRate : parentTwo.hungerDecreaseRate;
+        hungerDecreaseRate = MutateStat(hungerDecreaseRate, 0.25f, 1);
+        // thirstDecreaseRate
+        thirstDecreaseRate = Random.Range(0, 100) > 50 ? parentOne.thirstDecreaseRate : parentTwo.thirstDecreaseRate;
+        thirstDecreaseRate = MutateStat(thirstDecreaseRate, 0.25f, 1);
+        // attractiveness
+        attractiveness = Random.Range(0, 100) > 50 ? parentOne.attractiveness : parentTwo.attractiveness;
+        attractiveness = MutateStat(attractiveness, 0, 10);
+        // canMateResetTimer
+        canMateResetTimer = Random.Range(0, 100) > 50 ? parentOne.canMateResetTimer : parentTwo.canMateResetTimer;
+        canMateResetTimer = MutateStat(canMateResetTimer, 30, 120);
+        // hungerThreshold
+        hungerThreshold = Random.Range(0, 100) > 50 ? parentOne.hungerThreshold : parentTwo.hungerThreshold;
+        hungerThreshold = MutateStat(hungerThreshold, 30f, 50f);
+        // thirstThreshold
+        thirstThreshold = Random.Range(0, 100) > 50 ? parentOne.thirstThreshold : parentTwo.thirstThreshold;
+        thirstThreshold = MutateStat(thirstThreshold, 30f, 50f);
+        // Speed
+        navMeshAgent.speed = Random.Range(0, 100) > 50 ? parentOne.navMeshAgent.speed : parentTwo.navMeshAgent.speed;
+        navMeshAgent.speed = MutateStat(navMeshAgent.speed, 2f, 12f);
+        //Field Of View
+        fov.radius = Random.Range(0, 100) > 50 ? parentOne.fov.radius : parentTwo.fov.radius;
+        fov.radius = MutateStat(fov.radius, 13, 100);
+    }
     void Update()
     {
         agentUI.UpdateHungerSlider(hunger);
@@ -123,7 +144,7 @@ public abstract class AgentController : MonoBehaviour
 
     public void MoveToRandomPosition()
     {
-        Vector3 newPosition = GetRandomPosition(transform.position, movementRange);
+        Vector3 newPosition = GetRandomPosition(transform.position, fov.radius);
 
         Debug.DrawRay(newPosition, Vector3.up, Color.blue, 1.0f);
         navMeshAgent.SetDestination(newPosition);
@@ -213,31 +234,6 @@ public abstract class AgentController : MonoBehaviour
         return sex == Esex.FEMALE;
     }
 
-    public void Init(AgentController parentOne, AgentController parentTwo)
-    {
-        // hungerDecreaseRate
-        hungerDecreaseRate = Random.value > 0.5 ? parentOne.hungerDecreaseRate : parentTwo.hungerDecreaseRate;
-        hungerDecreaseRate = MutateStat(hungerDecreaseRate, 0.25f, 1);
-        // thirstDecreaseRate
-        thirstDecreaseRate = Random.Range(0, 100) > 50 ? parentOne.thirstDecreaseRate : parentTwo.thirstDecreaseRate;
-        thirstDecreaseRate = MutateStat(thirstDecreaseRate, 0.25f, 1);
-        // attractiveness
-        attractiveness = Random.Range(0, 100) > 50 ? parentOne.attractiveness : parentTwo.attractiveness;
-        attractiveness = MutateStat(attractiveness, 0, 10);
-        // canMateResetTimer
-        canMateResetTimer = Random.Range(0, 100) > 50 ? parentOne.canMateResetTimer : parentTwo.canMateResetTimer;
-        canMateResetTimer = MutateStat(canMateResetTimer, 30, 120);
-        // hungerThreshold
-        hungerThreshold = Random.Range(0, 100) > 50 ? parentOne.hungerThreshold : parentTwo.hungerThreshold;
-        hungerThreshold = MutateStat(hungerThreshold, 30f, 50f);
-        // thirstThreshold
-        thirstThreshold = Random.Range(0, 100) > 50 ? parentOne.thirstThreshold : parentTwo.thirstThreshold;
-        thirstThreshold = MutateStat(thirstThreshold, 30f, 50f);
-        // Speed
-        navMeshAgent.speed = Random.Range(0, 100) > 50 ? parentOne.navMeshAgent.speed : parentTwo.navMeshAgent.speed;
-        navMeshAgent.speed = MutateStat(navMeshAgent.speed, 2f, 12f);
-        //todo Field Of View
-    }
 
     private float MutateStat(float stat, float min, float max, float mutationStrength = 1.2f, float totalMutationChance = 0.3f)
     {
@@ -286,14 +282,14 @@ public abstract class AgentController : MonoBehaviour
         canMate = true;
     }
 
-    private Vector3 GetRandomPosition(Vector3 currentPosition, float movementRange)
+    private Vector3 GetRandomPosition(Vector3 currentPosition, float radius)
     {
         for (int i = 0; i < 30; i++)
         {
-            Vector3 randomPosition = currentPosition + Random.insideUnitSphere * movementRange;
+            Vector3 randomPosition = currentPosition + Random.insideUnitSphere * radius;
             NavMeshHit hit;
 
-            if (NavMesh.SamplePosition(randomPosition, out hit, movementRange, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(randomPosition, out hit, radius, NavMesh.AllAreas))
             {
                 return hit.position;
 
@@ -315,12 +311,6 @@ public abstract class AgentController : MonoBehaviour
     public bool HasDestination()
     {
         return navMeshAgent.hasPath && navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance;
-    }
-
-    private float GetDecreaseRate()
-    {
-        float[] possibleValues = { 0.25f, 0.5f, 0.75f, 1 };
-        return possibleValues[Random.Range(0, possibleValues.Length)];
     }
 
     private void DecrementHunger()

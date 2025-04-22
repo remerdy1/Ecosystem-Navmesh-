@@ -2,10 +2,12 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using System;
+using Random = UnityEngine.Random;
+using UnityEngine.AI;
 
 public class FOV : MonoBehaviour
 {
-    [Range(0, 360)] public float radius;
+    [Range(0, 100)] public float radius;
     public float angle;
 
     public LayerMask targetMask;
@@ -92,11 +94,14 @@ public class FOV : MonoBehaviour
 
         foreach (Transform target in inViewRadius)
         {
-            float distance = Vector3.Distance(target.position, transform.position);
-
-            if (closest.target == null || distance < closest.distance)
+            if (target != null)
             {
-                closest = (target, distance);
+                float distance = Vector3.Distance(target.position, transform.position);
+
+                if (closest.target == null || distance < closest.distance)
+                {
+                    closest = (target, distance);
+                }
             }
         }
 
