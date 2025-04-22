@@ -1,29 +1,50 @@
 using UnityEngine;
 using CustomAttributes;
 using System.Collections.Generic;
+using UnityEngine.AI;
 
 public class Simulation : MonoBehaviour
 {
+    [SerializeField] CameraController cameraController;
+
     // Food
     [SerializeField, ReadOnly] protected List<GameObject> spawnedFood;
-    [SerializeField] protected int initialFoodCount;
-    [SerializeField] protected int maxFoodCount = -1;
+    protected int initialFoodCount;
+    protected int maxFoodCount;
     [SerializeField] protected GameObject foodObject;
-    [SerializeField, Range(0, 100)] protected float foodPerSecond;
+    protected int foodPerSecond;
 
     // Prey
     [SerializeField, ReadOnly] protected List<GameObject> spawnedPrey;
-    [SerializeField] protected int initalPreyCount;
-    [SerializeField] protected int maxPreyCount = -1;
+    protected int initalPreyCount;
+    protected int maxPreyCount;
     [SerializeField] protected GameObject preyObject;
 
     // Plane
     [SerializeField] Collider preySpawnArea;
+    [SerializeField] Collider predatorSpawnArea;
+
+    // UI
+    [SerializeField] Canvas startMenu;
+    [SerializeField] Canvas overlay;
 
     private void Start()
     {
-        InvokeRepeating("SpawnFood", 1, 1);
-        InitializeSimulation();
+        spawnedFood = new List<GameObject>();
+        spawnedPrey = new List<GameObject>();
+
+        startMenu.enabled = true;
+        overlay.enabled = false;
+        cameraController.LockCamera();
+    }
+
+    public void SetStats(int initalPreyCount, int maxPreyCount, int initialFoodCount, int maxFoodCount, int foodPerSecond)
+    {
+        this.initalPreyCount = initalPreyCount;
+        this.maxPreyCount = maxPreyCount;
+        this.initialFoodCount = initialFoodCount;
+        this.maxFoodCount = maxFoodCount;
+        this.foodPerSecond = foodPerSecond;
     }
 
     public void DestroyFood(GameObject food)
@@ -42,16 +63,24 @@ public class Simulation : MonoBehaviour
         return spawnedPrey.Count;
     }
 
-    public void SpawnPrey(Vector3 localPosition)
+    public void SpawnPrey(Vector3 localPosition, AgentController parentOne = null, AgentController parentTwo = null)
     {
-        GameObject prey = Instantiate(preyObject, gameObject.transform);
-        spawnedPrey.Add(prey);
-        prey.transform.localPosition = localPosition;
+        if (spawnedPrey.Count < maxPreyCount)
+        {
+            GameObject prey = Instantiate(preyObject, transform);
+            prey.transform.localPosition = localPosition;
+            spawnedPrey.Add(prey);
+
+            if (parentOne != null && parentTwo != null)
+            {
+                prey.GetComponent<AgentController>().Init(parentOne, parentTwo);
+            }
+        }
     }
 
     public int GetMaxPreyCount()
     {
-        return this.maxPreyCount;
+        return maxPreyCount;
     }
 
     public void DestroyPrey(GameObject prey)
@@ -60,10 +89,12 @@ public class Simulation : MonoBehaviour
         Destroy(prey);
     }
 
-    public virtual void InitializeSimulation()
+    public void InitializeSimulation()
     {
+        InvokeRepeating("SpawnFood", 1, 1);
+
         // Spawn initial food
-        for (int i = 0; i < initialFoodCount && (GetCurrentFoodCount() < maxFoodCount || maxFoodCount == -1); i++)
+        for (int i = 0; i < initialFoodCount && (GetCurrentFoodCount() < maxFoodCount || maxFoodCount < 0); i++)
         {
             GameObject newFood = Instantiate(foodObject, gameObject.transform);
             newFood.transform.localPosition = GetRandomPosition(0.5f);
@@ -72,26 +103,19 @@ public class Simulation : MonoBehaviour
 
 
         // Spawn initial prey
-        for (int i = 0; i < initalPreyCount && (GetCurrentPreyCount() < maxPreyCount || maxPreyCount == -1); i++)
+        for (int i = 0; i < initalPreyCount && (GetCurrentPreyCount() < maxPreyCount || maxPreyCount < 0); i++)
         {
-            SpawnPrey(GetRandomPosition());
+            SpawnPrey(GetPreySpawnPosition());
         }
+
+        startMenu.enabled = false;
+        overlay.enabled = true;
+        cameraController.UnlockCamera();
     }
 
-    public void ResetFood()
+    public void Quit()
     {
-        for (int i = 0; i < spawnedFood.Count; i++)
-        {
-            DestroyFood(spawnedFood[i]);
-        }
-
-        // Spawn initial food
-        for (int i = 0; i < initialFoodCount && (GetCurrentFoodCount() < maxFoodCount || maxFoodCount == -1); i++)
-        {
-            GameObject newFood = Instantiate(foodObject, gameObject.transform);
-            newFood.transform.localPosition = GetRandomPosition(0.5f);
-            spawnedFood.Add(newFood);
-        }
+        Application.Quit();
     }
 
     protected void SpawnFood()
@@ -108,19 +132,45 @@ public class Simulation : MonoBehaviour
     }
 
 
-    /// <summary>
-    /// Returns a valid random position within the terrain
-    /// </summary>
-    /// <param name="y">
-    /// The y value of the positon (defaults to 1)
-    /// </param>
     public Vector3 GetRandomPosition(float y = 1f)
     {
+        // Attempt 30 times max
+        for (int i = 0; i < 30; i++)
+        {
+            float x = Random.Range(0, 300);
+            float z = Random.Range(0, 300);
+
+            Vector3 randomPos = new Vector3(x, y, z);
+            NavMeshHit hit;
+
+            if (NavMesh.SamplePosition(randomPos, out hit, 150, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+        }
+
+        return Random.value > 0.5f ? preySpawnArea.bounds.center : predatorSpawnArea.bounds.center;
+    }
+
+    public Vector3 GetPreySpawnPosition(float y = 1f)
+    {
         Bounds colliderBounds = preySpawnArea.bounds;
-        return new Vector3(
-            Random.Range(colliderBounds.min.x, colliderBounds.max.x),
-            y,
-            Random.Range(colliderBounds.min.z, colliderBounds.max.z)
-        );
+
+        // Attempt 30 times max
+        for (int i = 0; i < 30; i++)
+        {
+            float x = Random.Range(colliderBounds.min.x, colliderBounds.max.x);
+            float z = Random.Range(colliderBounds.min.z, colliderBounds.max.z);
+
+            Vector3 randomPos = new Vector3(x, y, z);
+            NavMeshHit hit;
+
+            if (NavMesh.SamplePosition(randomPos, out hit, 150, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+        }
+
+        return colliderBounds.center;
     }
 }

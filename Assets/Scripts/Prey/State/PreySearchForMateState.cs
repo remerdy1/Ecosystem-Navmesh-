@@ -14,7 +14,7 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
 
     public override void EnterState()
     {
-        Debug.Log("Entering Search For Mate State");
+        // Debug.Log("Entering Search For Mate State");
         potentialMate = null;
         potentialMateController = null;
     }
@@ -25,7 +25,7 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
         {
             if (preyController.fov.preyInViewRadius.Count > 0)
             {
-                Debug.Log("Potential Mate In FOV");
+                // Debug.Log("Potential Mate In FOV");
 
                 // Find closest prey not in rejection list
                 List<Transform> preyInViewRadius = preyController.fov.preyInViewRadius;
@@ -34,7 +34,7 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
                 {
                     PreyController controller = prey.GetComponent<PreyController>();
 
-                    if (!preyController.rejectionList.Contains(prey) && controller.IsFemale())
+                    if (!preyController.rejectionList.Contains(prey) && controller.IsFemale() && !controller.FoundMate())
                     {
                         potentialMate = prey;
                         potentialMateController = controller;
@@ -44,11 +44,11 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
                 if (potentialMate != null)
                 {
                     // male makes request to female 
-                    Debug.Log($"Making Request to {potentialMateController}");
+                    // Debug.Log($"Making Request to {potentialMateController}");
 
                     preyController.StartCoroutine(potentialMateController.MateRequest(preyController, (success) =>
                     {
-                        Debug.Log($"Request Made - Result: {success}");
+                        // Debug.Log($"Request Made - Result: {success}");
                         if (success)
                         {
                             potentialMateController.SetMate(preyController.transform);
@@ -74,7 +74,7 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
 
     public override void ExitState()
     {
-        Debug.Log("Exiting Search For State");
+        // Debug.Log("Exiting Search For State");
         potentialMate = null;
         potentialMateController = null;
     }

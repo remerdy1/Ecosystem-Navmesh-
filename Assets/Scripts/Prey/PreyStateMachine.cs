@@ -66,4 +66,9 @@ public class PreyStateMachine : AbstractStateMachine<PreyStateMachine.PreyState>
 
         return PreyState.Wander;
     }
+
+    protected override void UpdateStateText(string text)
+    {
+        preyController.UpdateText(text);
+    }
 }

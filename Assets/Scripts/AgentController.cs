@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.AI;
 using Quaternion = UnityEngine.Quaternion;
@@ -11,6 +9,7 @@ using Vector3 = UnityEngine.Vector3;
 
 public abstract class AgentController : MonoBehaviour
 {
+    [SerializeField] Simulation simulation;
     protected NavMeshAgent navMeshAgent;
     //todo make private
     public FOV fov { get; protected set; }
@@ -35,50 +34,56 @@ public abstract class AgentController : MonoBehaviour
     [field: SerializeField] protected float hungerThreshold;
     [field: SerializeField] protected float thirstThreshold;
 
+    [field: SerializeField] protected float rotationSpeed = 1f;
+
+    // Reproduction
     [field: SerializeField] public Esex sex { get; private set; }
-    [field: SerializeField] public int attractiveness { get; private set; }
+    [field: SerializeField] public float attractiveness { get; private set; }
     [field: SerializeField] protected bool canMate;
     [field: SerializeField] protected float canMateResetTimer;
     [field: SerializeField] protected Transform mate;
 
-    [field: SerializeField] protected float rotationSpeed = 1f;
+    // UI
+    [field: SerializeField] protected AgentUIController agentUI;
 
     //todo
-    //todo Speed
-    //todo Metabolism
     //todo Field Of View
 
     // Movement
     public float movementRange { get; protected set; }
 
-
-    public abstract GameObject GetPrefab();
-
     void Awake()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
         fov = GetComponent<FOV>();
+        simulation = transform.parent.GetComponent<Simulation>();
 
-        hungerThreshold = Random.Range(30, 51);
-        thirstThreshold = Random.Range(30, 51);
-        movementRange = Random.Range(30, 51);
+        hungerThreshold = Random.Range(30f, 50f);
+        thirstThreshold = Random.Range(30f, 50f);
+        movementRange = Random.Range(30f, 50f);
 
         hunger = Random.Range(hungerThreshold, 100);
         thirst = Random.Range(hungerThreshold, 100);
-        // energy = Random.Range(hungerThreshold, 100);
 
         sex = (Esex)Random.Range(0, 2);
-        attractiveness = Random.Range(1, 11);
-        canMateResetTimer = Random.Range(30, 120);
+        attractiveness = Random.Range(0f, 10f);
+        canMateResetTimer = Random.Range(30f, 120f);
         StartCoroutine(ResetCanMate(30)); // Can't mate for the first 30 seconds of spawning
         mate = null;
 
         hungerDecreaseRate = GetDecreaseRate();
         thirstDecreaseRate = GetDecreaseRate();
-        // energyDecreaseRate = GetRandomFloat(0, 1, 0.25f);
 
         InvokeRepeating("DecrementHunger", 1, 1);
         InvokeRepeating("DecrementThirst", 1, 1);
+
+        navMeshAgent.speed = Random.Range(2, 5); //todo 
+    }
+
+    void Update()
+    {
+        agentUI.UpdateHungerSlider(hunger);
+        agentUI.UpdateThirstSlider(thirst);
     }
 
     public bool IsHungry()
@@ -109,6 +114,11 @@ public abstract class AgentController : MonoBehaviour
     public Transform GetMate()
     {
         return mate;
+    }
+
+    public void UpdateText(string text)
+    {
+        agentUI.UpdateText(text);
     }
 
     public void MoveToRandomPosition()
@@ -160,7 +170,9 @@ public abstract class AgentController : MonoBehaviour
 
     public bool AtTarget()
     {
-        return navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance;
+        return !navMeshAgent.pathPending &&
+               navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance &&
+               (!navMeshAgent.hasPath || navMeshAgent.velocity.sqrMagnitude == 0f);
     }
 
     public float DistanceToTarget(Transform target)
@@ -170,24 +182,22 @@ public abstract class AgentController : MonoBehaviour
 
     public IEnumerator MateRequest(AgentController other, Action<bool> onComplete)
     {
-        Debug.Log("Request Reveived");
+        // Debug.Log("Request Reveived");
 
         // thinking...
         yield return new WaitForSeconds(3f);
-
-
 
         if (IsMale() || !canMate)
         {
             onComplete(false);
             yield break;
         }
-
-        onComplete(true);
-        yield break;
+        // testing
+        /*         onComplete(true);
+                yield break; */
         ResetPath();
 
-        float chance = Math.Max(other.attractiveness * 10, 20); // minimum 20% chance to reproduce
+        float chance = Mathf.Max(other.attractiveness * 10, 20); // minimum 20% chance to reproduce
         float roll = Random.Range(0, 100);
 
         onComplete(roll <= chance);
@@ -203,7 +213,52 @@ public abstract class AgentController : MonoBehaviour
         return sex == Esex.FEMALE;
     }
 
-    public void Reproduce()
+    public void Init(AgentController parentOne, AgentController parentTwo)
+    {
+        // hungerDecreaseRate
+        hungerDecreaseRate = Random.value > 0.5 ? parentOne.hungerDecreaseRate : parentTwo.hungerDecreaseRate;
+        hungerDecreaseRate = MutateStat(hungerDecreaseRate, 0.25f, 1);
+        // thirstDecreaseRate
+        thirstDecreaseRate = Random.Range(0, 100) > 50 ? parentOne.thirstDecreaseRate : parentTwo.thirstDecreaseRate;
+        thirstDecreaseRate = MutateStat(thirstDecreaseRate, 0.25f, 1);
+        // attractiveness
+        attractiveness = Random.Range(0, 100) > 50 ? parentOne.attractiveness : parentTwo.attractiveness;
+        attractiveness = MutateStat(attractiveness, 0, 10);
+        // canMateResetTimer
+        canMateResetTimer = Random.Range(0, 100) > 50 ? parentOne.canMateResetTimer : parentTwo.canMateResetTimer;
+        canMateResetTimer = MutateStat(canMateResetTimer, 30, 120);
+        // hungerThreshold
+        hungerThreshold = Random.Range(0, 100) > 50 ? parentOne.hungerThreshold : parentTwo.hungerThreshold;
+        hungerThreshold = MutateStat(hungerThreshold, 30f, 50f);
+        // thirstThreshold
+        thirstThreshold = Random.Range(0, 100) > 50 ? parentOne.thirstThreshold : parentTwo.thirstThreshold;
+        thirstThreshold = MutateStat(thirstThreshold, 30f, 50f);
+        // Speed
+        navMeshAgent.speed = Random.Range(0, 100) > 50 ? parentOne.navMeshAgent.speed : parentTwo.navMeshAgent.speed;
+        navMeshAgent.speed = MutateStat(navMeshAgent.speed, 2f, 12f);
+        //todo Field Of View
+    }
+
+    private float MutateStat(float stat, float min, float max, float mutationStrength = 1.2f, float totalMutationChance = 0.3f)
+    {
+        Debug.Log("Check for mutation!");
+        float roll = Random.value;
+
+        if (roll < totalMutationChance / 2)
+        {
+            // Debug.Log("Mutate!");
+            return Mathf.Clamp(stat * Random.Range(1f, mutationStrength), min, max);
+        }
+        else if (roll < totalMutationChance)
+        {
+            // Debug.Log("Mutate!");
+            return Mathf.Clamp(stat / Random.Range(1f, mutationStrength), min, max);
+        }
+
+        return Mathf.Clamp(stat, min, max);
+    }
+
+    public void Reproduce(AgentController mateController)
     {
         if (sex == Esex.FEMALE)
         {
@@ -215,12 +270,11 @@ public abstract class AgentController : MonoBehaviour
 
             if (NavMesh.SamplePosition(spawnPos, out hit, 5f, NavMesh.AllAreas))
             {
-                Instantiate(GetPrefab(), hit.position, transform.rotation, transform.parent);
-                Debug.Log("Offspring created!");
+                simulation.SpawnPrey(hit.position, this, mateController);
             }
             else
             {
-                Instantiate(GetPrefab(), transform.position, transform.rotation, transform.parent);
+                simulation.SpawnPrey(transform.position, this, mateController);
             }
         }
     }
@@ -246,14 +300,16 @@ public abstract class AgentController : MonoBehaviour
             }
         }
 
+        // Debug.Log("Valid Path Not Found: Returning Zeroes");
         return Vector3.zero;
     }
 
     public void GoToClosestWaterEdge()
     {
         Vector3 closestPosition = waterController.GetClosestPositionMarker(transform.position);
-        Debug.Log($"Closest Position: {closestPosition}");
+        // Debug.Log($"Closest Position: {closestPosition}");
         MoveToPosition(closestPosition);
+        waterController.OccupyPosition(closestPosition, this);
     }
 
     public bool HasDestination()
@@ -277,21 +333,17 @@ public abstract class AgentController : MonoBehaviour
         thirst -= thirstDecreaseRate;
     }
 
-    /*     private void DecrementEnergy()
-        {
-            energy -= energyDecreaseRate;
-        } */
-
-
     float time = 0;
     void OnTriggerStay(Collider other)
     {
         if (other.tag == "Water")
         {
+            Debug.Log("Entered Water");
+
             time += Time.deltaTime;
             if (time >= 1)
             {
-                thirst = Math.Min(thirst + 10, 100);
+                thirst = Mathf.Min(thirst + 4, 100);
                 time = time % 1;
             }
         }
