@@ -17,14 +17,14 @@ public class Overlay : MonoBehaviour
     {
         elapsedTime += Time.deltaTime;
 
-        int minutes = Mathf.FloorToInt(elapsedTime / 60F);
-        int seconds = Mathf.FloorToInt(elapsedTime % 60F);
-        int milliseconds = Mathf.FloorToInt((elapsedTime * 100F) % 100);
+        int minutes = Mathf.FloorToInt(elapsedTime / 60f);
+        int seconds = Mathf.FloorToInt(elapsedTime % 60f);
+        int milliseconds = Mathf.FloorToInt((elapsedTime * 100f) % 100);
 
 
         preyCount.text = $"Prey Count: {simulation.GetCurrentPreyCount()}";
-        preyCount.text = $"Predator Count: {0}";
-        preyCount.text = $"Food Count: {simulation.GetCurrentFoodCount()}";
+        predatorCount.text = $"Predator Count: {0}";
+        foodCount.text = $"Food Count: {simulation.GetCurrentFoodCount()}";
         timeElapsed.text = $"Time Elapsed: {minutes:00}:{seconds:00}:{milliseconds:00}";
     }
 }

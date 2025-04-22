@@ -4,10 +4,11 @@ using TMPro;
 
 public class StartMenu : MonoBehaviour
 {
-    [SerializeField] string defaultInitialFood = "7";
-    [SerializeField] string defaultMaxPrey = "50";
-    [SerializeField] string defaultInitialPrey = "10";
-    [SerializeField] string defaultMaxFood = "100";
+    string defaultInitialFood = "100";
+    int defaultFoodPerSecond = 10;
+    string defaultMaxPrey = "50";
+    string defaultInitialPrey = "15";
+    string defaultMaxFood = "500";
 
     [SerializeField] Simulation simulation;
 
@@ -20,11 +21,11 @@ public class StartMenu : MonoBehaviour
 
     void Start()
     {
-        initialPreyCount.text = "10";
-        maxPreyCount.text = "50";
-        initialFoodCount.text = "7";
-        maxFoodCount.text = "100";
-        foodPerSecond.value = 10;
+        initialPreyCount.text = defaultInitialPrey;
+        maxPreyCount.text = defaultMaxPrey;
+        initialFoodCount.text = defaultInitialFood;
+        maxFoodCount.text = defaultMaxFood;
+        foodPerSecond.value = defaultFoodPerSecond;
     }
 
     public void StartSimulation()

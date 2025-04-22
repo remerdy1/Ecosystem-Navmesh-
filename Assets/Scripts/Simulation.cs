@@ -1,6 +1,7 @@
 using UnityEngine;
 using CustomAttributes;
 using System.Collections.Generic;
+using UnityEngine.AI;
 
 public class Simulation : MonoBehaviour
 {
@@ -21,6 +22,7 @@ public class Simulation : MonoBehaviour
 
     // Plane
     [SerializeField] Collider preySpawnArea;
+    [SerializeField] Collider predatorSpawnArea;
 
     // UI
     [SerializeField] Canvas startMenu;
@@ -103,7 +105,7 @@ public class Simulation : MonoBehaviour
         // Spawn initial prey
         for (int i = 0; i < initalPreyCount && (GetCurrentPreyCount() < maxPreyCount || maxPreyCount < 0); i++)
         {
-            SpawnPrey(GetRandomPosition());
+            SpawnPrey(GetPreySpawnPosition());
         }
 
         startMenu.enabled = false;
@@ -129,19 +131,46 @@ public class Simulation : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Returns a valid random position within the terrain
-    /// </summary>
-    /// <param name="y">
-    /// The y value of the positon (defaults to 1)
-    /// </param>
+
     public Vector3 GetRandomPosition(float y = 1f)
     {
+        // Attempt 30 times max
+        for (int i = 0; i < 30; i++)
+        {
+            float x = Random.Range(0, 300);
+            float z = Random.Range(0, 300);
+
+            Vector3 randomPos = new Vector3(x, y, z);
+            NavMeshHit hit;
+
+            if (NavMesh.SamplePosition(randomPos, out hit, 150, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+        }
+
+        return Random.value > 0.5f ? preySpawnArea.bounds.center : predatorSpawnArea.bounds.center;
+    }
+
+    public Vector3 GetPreySpawnPosition(float y = 1f)
+    {
         Bounds colliderBounds = preySpawnArea.bounds;
-        return new Vector3(
-            Random.Range(colliderBounds.min.x, colliderBounds.max.x),
-            y,
-            Random.Range(colliderBounds.min.z, colliderBounds.max.z)
-        );
+
+        // Attempt 30 times max
+        for (int i = 0; i < 30; i++)
+        {
+            float x = Random.Range(colliderBounds.min.x, colliderBounds.max.x);
+            float z = Random.Range(colliderBounds.min.z, colliderBounds.max.z);
+
+            Vector3 randomPos = new Vector3(x, y, z);
+            NavMeshHit hit;
+
+            if (NavMesh.SamplePosition(randomPos, out hit, 150, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
+        }
+
+        return colliderBounds.center;
     }
 }
