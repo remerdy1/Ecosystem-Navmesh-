@@ -312,6 +312,7 @@ public abstract class AgentController : MonoBehaviour
         Vector3 closestPosition = waterController.GetClosestPositionMarker(transform.position);
         // Debug.Log($"Closest Position: {closestPosition}");
         MoveToPosition(closestPosition);
+        waterController.OccupyPosition(closestPosition, this);
     }
 
     public bool HasDestination()

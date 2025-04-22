@@ -8,54 +8,68 @@ public class CameraController : MonoBehaviour
     private float yaw = 0.0f;
     private float pitch = 0.0f;
     Rigidbody rb;
+    private bool lockCamera = true;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        transform.position = new Vector3(0, 0, 0);
+        transform.position = new Vector3(150, 50, 0);
         rb = GetComponent<Rigidbody>();
+    }
+
+    public void UnlockCamera()
+    {
+        lockCamera = false;
+    }
+
+    public void LockCamera()
+    {
+        lockCamera = true;
     }
 
     void Update()
     {
-        Vector3 moveDirection = Vector3.zero;
+        if (!lockCamera)
+        {
+            Vector3 moveDirection = Vector3.zero;
 
-        if (Input.GetKey(KeyCode.W))
-        {
-            moveDirection += transform.forward;
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            moveDirection -= transform.forward;
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            moveDirection -= transform.right;
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            moveDirection += transform.right;
-        }
+            if (Input.GetKey(KeyCode.W))
+            {
+                moveDirection += transform.forward;
+            }
+            if (Input.GetKey(KeyCode.S))
+            {
+                moveDirection -= transform.forward;
+            }
+            if (Input.GetKey(KeyCode.A))
+            {
+                moveDirection -= transform.right;
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                moveDirection += transform.right;
+            }
 
-        // Normalize to maintain a consistent speed in diagonal movement
-        if (moveDirection != Vector3.zero)
-        {
-            moveDirection.Normalize();
-        }
+            // Normalize to maintain a consistent speed in diagonal movement
+            if (moveDirection != Vector3.zero)
+            {
+                moveDirection.Normalize();
+            }
 
-        if (Input.GetKey(KeyCode.LeftShift))
-        {
-            rb.MovePosition(transform.position + moveDirection * movementSpeed * 100 * Time.deltaTime * 5);
-        }
-        else
-        {
-            rb.MovePosition(transform.position + moveDirection * movementSpeed * 100 * Time.deltaTime);
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                rb.MovePosition(transform.position + moveDirection * movementSpeed * 100 * Time.deltaTime * 5);
+            }
+            else
+            {
+                rb.MovePosition(transform.position + moveDirection * movementSpeed * 100 * Time.deltaTime);
 
-        }
+            }
 
-        yaw += mouseSpeed * Input.GetAxis("Mouse X");
-        pitch -= mouseSpeed * Input.GetAxis("Mouse Y");
-        transform.eulerAngles = new Vector3(pitch, yaw, 0.0f);
+            yaw += mouseSpeed * Input.GetAxis("Mouse X");
+            pitch -= mouseSpeed * Input.GetAxis("Mouse Y");
+            transform.eulerAngles = new Vector3(pitch, yaw, 0.0f);
+        }
     }
 
 }

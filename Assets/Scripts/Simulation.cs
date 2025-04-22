@@ -1,30 +1,45 @@
 using UnityEngine;
 using CustomAttributes;
 using System.Collections.Generic;
-using UnityEngine.PlayerLoop;
 
 public class Simulation : MonoBehaviour
 {
+    [SerializeField] CameraController cameraController;
+
     // Food
     [SerializeField, ReadOnly] protected List<GameObject> spawnedFood;
-    [SerializeField] protected int initialFoodCount;
-    [SerializeField] protected int maxFoodCount = -1;
+    protected int initialFoodCount;
+    protected int maxFoodCount = -1;
     [SerializeField] protected GameObject foodObject;
-    [SerializeField, Range(0, 100)] protected float foodPerSecond;
+    protected int foodPerSecond;
 
     // Prey
     [SerializeField, ReadOnly] protected List<GameObject> spawnedPrey;
-    [SerializeField] protected int initalPreyCount;
-    [SerializeField] protected int maxPreyCount = -1;
+    protected int initalPreyCount;
+    protected int maxPreyCount = -1;
     [SerializeField] protected GameObject preyObject;
 
     // Plane
     [SerializeField] Collider preySpawnArea;
 
+    // UI
+    [SerializeField] Canvas startMenu;
+    [SerializeField] Canvas overlay;
+
     private void Start()
     {
-        InvokeRepeating("SpawnFood", 1, 1);
-        InitializeSimulation();
+        startMenu.enabled = true;
+        overlay.enabled = false;
+        cameraController.LockCamera();
+    }
+
+    public void SetStats(int initalPreyCount, int maxPreyCount, int initialFoodCount, int maxFoodCount, int foodPerSecond)
+    {
+        this.initalPreyCount = initalPreyCount;
+        this.maxPreyCount = maxPreyCount;
+        this.initalPreyCount = initialFoodCount;
+        this.maxFoodCount = maxFoodCount;
+        this.foodPerSecond = foodPerSecond;
     }
 
     public void DestroyFood(GameObject food)
@@ -61,10 +76,12 @@ public class Simulation : MonoBehaviour
         Destroy(prey);
     }
 
-    public virtual void InitializeSimulation()
+    public void InitializeSimulation()
     {
+        InvokeRepeating("SpawnFood", 1, 1);
+
         // Spawn initial food
-        for (int i = 0; i < initialFoodCount && (GetCurrentFoodCount() < maxFoodCount || maxFoodCount == -1); i++)
+        for (int i = 0; i < initialFoodCount && (GetCurrentFoodCount() < maxFoodCount || maxFoodCount < 0); i++)
         {
             GameObject newFood = Instantiate(foodObject, gameObject.transform);
             newFood.transform.localPosition = GetRandomPosition(0.5f);
@@ -73,26 +90,19 @@ public class Simulation : MonoBehaviour
 
 
         // Spawn initial prey
-        for (int i = 0; i < initalPreyCount && (GetCurrentPreyCount() < maxPreyCount || maxPreyCount == -1); i++)
+        for (int i = 0; i < initalPreyCount && (GetCurrentPreyCount() < maxPreyCount || maxPreyCount < 1); i++)
         {
             SpawnPrey(GetRandomPosition());
         }
+
+        startMenu.enabled = false;
+        overlay.enabled = true;
+        cameraController.UnlockCamera();
     }
 
-    public void ResetFood()
+    public void Quit()
     {
-        for (int i = 0; i < spawnedFood.Count; i++)
-        {
-            DestroyFood(spawnedFood[i]);
-        }
-
-        // Spawn initial food
-        for (int i = 0; i < initialFoodCount && (GetCurrentFoodCount() < maxFoodCount || maxFoodCount == -1); i++)
-        {
-            GameObject newFood = Instantiate(foodObject, gameObject.transform);
-            newFood.transform.localPosition = GetRandomPosition(0.5f);
-            spawnedFood.Add(newFood);
-        }
+        Application.Quit();
     }
 
     protected void SpawnFood()
@@ -107,7 +117,6 @@ public class Simulation : MonoBehaviour
             }
         }
     }
-
 
     /// <summary>
     /// Returns a valid random position within the terrain
