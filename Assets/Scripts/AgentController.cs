@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.AI;
 using Quaternion = UnityEngine.Quaternion;
@@ -10,11 +11,13 @@ using Vector3 = UnityEngine.Vector3;
 public abstract class AgentController : MonoBehaviour
 {
     [SerializeField] protected Simulation simulation;
+
     protected NavMeshAgent navMeshAgent;
-    //todo make private
     public FOV fov { get; protected set; }
     public List<Transform> rejectionList { get; private set; } = new List<Transform>(); //todo forget after x minutes
     [field: SerializeField] public WaterController waterController;
+    [SerializeField] Material maleMaterial;
+    [SerializeField] Material femaleMaterial;
 
     public enum Esex
     {
@@ -25,11 +28,9 @@ public abstract class AgentController : MonoBehaviour
     // Stats
     [field: SerializeField] protected float hunger;
     [field: SerializeField] protected float thirst;
-    // [field: SerializeField] protected float energy;
 
     [field: SerializeField] protected float hungerDecreaseRate;
     [field: SerializeField] protected float thirstDecreaseRate;
-    // [field: SerializeField] protected float energyDecreaseRate;
 
     [field: SerializeField] protected float hungerThreshold;
     [field: SerializeField] protected float thirstThreshold;
@@ -46,6 +47,9 @@ public abstract class AgentController : MonoBehaviour
     // UI
     [field: SerializeField] protected AgentUIController agentUI;
 
+    public abstract void Reproduce(AgentController mateController);
+    protected abstract void Die();
+
     void Awake()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
@@ -59,18 +63,20 @@ public abstract class AgentController : MonoBehaviour
         thirst = Random.Range(hungerThreshold, 100);
 
         sex = (Esex)Random.Range(0, 2);
+        GetComponent<MeshRenderer>().material = (sex == Esex.FEMALE) ? femaleMaterial : maleMaterial;
+
         attractiveness = Random.Range(0f, 10f);
         canMateResetTimer = Random.Range(30f, 120f);
         StartCoroutine(ResetCanMate(30)); // Can't mate for the first 30 seconds of spawning
         mate = null;
 
-        hungerDecreaseRate = Random.Range(0, 1f);
-        thirstDecreaseRate = Random.Range(0, 1f);
+        hungerDecreaseRate = Random.Range(1, 21) * 0.05f;
+        thirstDecreaseRate = Random.Range(1, 21) * 0.05f;
 
         InvokeRepeating("DecrementHunger", 1, 1);
         InvokeRepeating("DecrementThirst", 1, 1);
 
-        navMeshAgent.speed = Random.Range(2, 5f); //todo 
+        navMeshAgent.speed = Random.Range(2, 5f);
         fov.radius = Random.Range(13, 30f);
     }
 
@@ -105,6 +111,11 @@ public abstract class AgentController : MonoBehaviour
     {
         agentUI.UpdateHungerSlider(hunger);
         agentUI.UpdateThirstSlider(thirst);
+
+        if (hunger <= 0 || thirst <= 0)
+        {
+            Die();
+        }
     }
 
     public bool IsHungry()
@@ -145,28 +156,33 @@ public abstract class AgentController : MonoBehaviour
     public void MoveToRandomPosition()
     {
         Vector3 newPosition = GetRandomPosition(transform.position, fov.radius);
-
-        Debug.DrawRay(newPosition, Vector3.up, Color.blue, 1.0f);
-        navMeshAgent.SetDestination(newPosition);
+        MoveToPosition(newPosition);
     }
 
     public void MoveToTarget(Transform target)
     {
-        // Debug.Log($"Moving to {target.position}");
-        Debug.DrawRay(target.position, Vector3.up, Color.green, 1f);
-        navMeshAgent.SetDestination(target.position);
+        if (target != null)
+        {
+            Vector3 newPosition = target.position;
+            MoveToPosition(newPosition);
+        }
     }
 
-    public void MoveToPosition(Vector3 position)
+    public void MoveToPosition(Vector3 newPosition)
     {
-        // Debug.Log($"Moving to {position}");
-        Debug.DrawRay(position, Vector3.up, Color.green, 1f);
-        navMeshAgent.SetDestination(position);
+        NavMeshHit hit;
+
+        if (NavMesh.SamplePosition(newPosition, out hit, 5.0f, NavMesh.AllAreas))
+        {
+            // Debug.Log($"Moving to {hit.position}");
+            Debug.DrawRay(hit.position, Vector3.up, Color.blue, 1.0f);
+            navMeshAgent.SetDestination(hit.position);
+        }
     }
 
     public void ResetPath()
     {
-        navMeshAgent.ResetPath();
+        if (navMeshAgent != null) navMeshAgent.ResetPath();
     }
 
     public void RotateTowardTarget(Transform target)
@@ -204,7 +220,6 @@ public abstract class AgentController : MonoBehaviour
     public IEnumerator MateRequest(AgentController other, Action<bool> onComplete)
     {
         // Debug.Log("Request Reveived");
-
         // thinking...
         yield return new WaitForSeconds(3f);
 
@@ -224,6 +239,24 @@ public abstract class AgentController : MonoBehaviour
         onComplete(roll <= chance);
     }
 
+    public void DrawLine(Vector3 from, Vector3 to, Color color)
+    {
+        GameObject line = new GameObject("MateRequestLine");
+        LineRenderer lineRenderer = line.AddComponent<LineRenderer>();
+
+        lineRenderer.positionCount = 2;
+        lineRenderer.SetPosition(0, from);
+        lineRenderer.SetPosition(1, to);
+
+        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        lineRenderer.startColor = color;
+        lineRenderer.endColor = color;
+        lineRenderer.startWidth = 1f;
+        lineRenderer.endWidth = 1f;
+
+        GameObject.Destroy(line, 1f);
+    }
+
     public bool IsMale()
     {
         return sex == Esex.MALE;
@@ -237,7 +270,7 @@ public abstract class AgentController : MonoBehaviour
 
     private float MutateStat(float stat, float min, float max, float mutationStrength = 1.2f, float totalMutationChance = 0.3f)
     {
-        Debug.Log("Check for mutation!");
+        // Debug.Log("Check for mutation!");
         float roll = Random.value;
 
         if (roll < totalMutationChance / 2)
@@ -252,27 +285,6 @@ public abstract class AgentController : MonoBehaviour
         }
 
         return Mathf.Clamp(stat, min, max);
-    }
-
-    public void Reproduce(AgentController mateController)
-    {
-        if (sex == Esex.FEMALE)
-        {
-            Vector3 offset = new Vector3(Random.Range(1, 5), 0, Random.Range(1, 5));
-
-            // Make sure the spawn position is on the NavMesh
-            NavMeshHit hit;
-            Vector3 spawnPos = transform.position + offset;
-
-            if (NavMesh.SamplePosition(spawnPos, out hit, 5f, NavMesh.AllAreas))
-            {
-                simulation.SpawnPrey(hit.position, this, mateController);
-            }
-            else
-            {
-                simulation.SpawnPrey(transform.position, this, mateController);
-            }
-        }
     }
 
     public IEnumerator ResetCanMate(float time = -1)
@@ -328,7 +340,7 @@ public abstract class AgentController : MonoBehaviour
     {
         if (other.tag == "Water")
         {
-            Debug.Log("Entered Water");
+            // Debug.Log("Entered Water");
 
             time += Time.deltaTime;
             if (time >= 1)

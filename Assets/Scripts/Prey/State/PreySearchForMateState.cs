@@ -21,6 +21,11 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
 
     public override void UpdateState()
     {
+        if (preyController.AtTarget())
+        {
+            preyController.MoveToRandomPosition();
+        }
+
         if (potentialMate == null)
         {
             if (preyController.fov.preyInViewRadius.Count > 0)
@@ -32,12 +37,14 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
 
                 foreach (Transform prey in preyInViewRadius)
                 {
-                    PreyController controller = prey.GetComponent<PreyController>();
-
-                    if (!preyController.rejectionList.Contains(prey) && controller.IsFemale() && !controller.FoundMate())
+                    if (prey != null)
                     {
-                        potentialMate = prey;
-                        potentialMateController = controller;
+                        PreyController controller = prey.GetComponent<PreyController>();
+                        if (!preyController.rejectionList.Contains(prey) && controller.IsFemale() && !controller.FoundMate())
+                        {
+                            potentialMate = prey;
+                            potentialMateController = controller;
+                        }
                     }
                 }
 
@@ -45,17 +52,18 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
                 {
                     // male makes request to female 
                     // Debug.Log($"Making Request to {potentialMateController}");
-
                     preyController.StartCoroutine(potentialMateController.MateRequest(preyController, (success) =>
                     {
                         // Debug.Log($"Request Made - Result: {success}");
-                        if (success)
+                        if (success && potentialMateController != null)
                         {
-                            potentialMateController.SetMate(preyController.transform);
+                            potentialMateController.SetMate(preyController.gameObject.transform);
                             preyController.SetMate(potentialMate);
+                            preyController.DrawLine(preyController.transform.position, potentialMate.transform.position, Color.green);
                         }
-                        else
+                        else if (potentialMate != null)
                         {
+                            preyController.DrawLine(preyController.transform.position, potentialMate.transform.position, Color.red);
                             preyController.rejectionList.Add(potentialMate);
                             potentialMateController.rejectionList.Add(preyController.transform);
                             potentialMate = null;
@@ -63,10 +71,6 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
                         }
                     }));
                 }
-            }
-            else if (preyController.AtTarget())
-            {
-                preyController.MoveToRandomPosition();
             }
         }
     }

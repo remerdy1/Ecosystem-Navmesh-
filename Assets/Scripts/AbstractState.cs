@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 public abstract class AbstractState<EState> where EState : Enum
 {
@@ -13,6 +12,4 @@ public abstract class AbstractState<EState> where EState : Enum
     public abstract void EnterState();
     public abstract void UpdateState();
     public abstract void ExitState();
-    // public abstract EState GetNextState();
-    // public abstract void OnTriggerEnter(Collider other);
 }

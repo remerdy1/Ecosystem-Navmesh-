@@ -1,11 +1,7 @@
-using UnityEditor.Experimental.GraphView;
-using UnityEngine;
-
 public class PreyStateMachine : AbstractStateMachine<PreyStateMachine.PreyState>
 {
     public enum PreyState
     {
-        Flee,
         Hungry,
         Thirsty,
         SearchForMate,
@@ -16,20 +12,22 @@ public class PreyStateMachine : AbstractStateMachine<PreyStateMachine.PreyState>
     PreyController preyController;
 
     PreyHungryState preyHungryState;
-    PreyWanderState preyWanderState;
+    AgentWanderState<PreyState> preyWanderState;
     PreySearchForMateState preySearchForMateState;
-    PreyMateState preyMateState;
-    PreyThirstyState preyThirstyState;
+    AgentMateState<PreyState> preyMateState;
+    AgentThirstyState<PreyState> preyThirstyState;
+
+    PreyState priority = PreyState.Hungry;
 
     private void Awake()
     {
         preyController = GetComponent<PreyController>();
 
-        preyWanderState = new PreyWanderState(preyController);
-        preyHungryState = new PreyHungryState(preyController);
         preySearchForMateState = new PreySearchForMateState(preyController);
-        preyMateState = new PreyMateState(preyController);
-        preyThirstyState = new PreyThirstyState(preyController);
+        preyHungryState = new PreyHungryState(preyController);
+        preyWanderState = new AgentWanderState<PreyState>(preyController, PreyState.Wander);
+        preyThirstyState = new AgentThirstyState<PreyState>(preyController, PreyState.Thirsty);
+        preyMateState = new AgentMateState<PreyState>(preyController, PreyState.Mate);
 
         states.Add(PreyState.Hungry, preyHungryState);
         states.Add(PreyState.Wander, preyWanderState);
@@ -42,22 +40,23 @@ public class PreyStateMachine : AbstractStateMachine<PreyStateMachine.PreyState>
 
     protected override PreyState GetNextState()
     {
-        if (preyController.IsChased())
-        {
-            //todo cancel any mating in progress
-            return PreyState.Flee;
-        }
-        else if (preyController.FoundMate())
+        if (preyController.FoundMate())
         {
             return PreyState.Mate;
         }
-        else if (preyController.IsHungry())
+        else if (preyController.IsHungry() && !preyController.IsThirsty())
         {
+            priority = PreyState.Hungry;
             return PreyState.Hungry;
         }
-        else if (preyController.IsThirsty())
+        else if (preyController.IsThirsty() && !preyController.IsHungry())
         {
+            priority = PreyState.Thirsty;
             return PreyState.Thirsty;
+        }
+        else if (preyController.IsThirsty() && preyController.IsHungry())
+        {
+            return priority;
         }
         else if (preyController.CanMate() && preyController.IsMale())
         {

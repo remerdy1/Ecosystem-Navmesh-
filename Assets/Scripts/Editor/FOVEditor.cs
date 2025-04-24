@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,7 +21,10 @@ public class FOVEditor : Editor
 
         foreach (Transform visibleTarget in fov.foodInViewRadius)
         {
-            Handles.DrawLine(fov.transform.position, visibleTarget.position);
+            if (visibleTarget != null)
+            {
+                Handles.DrawLine(fov.transform.position, visibleTarget.position);
+            }
         }
     }
 }

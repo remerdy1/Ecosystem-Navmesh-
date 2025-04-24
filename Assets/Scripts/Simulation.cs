@@ -20,13 +20,17 @@ public class Simulation : MonoBehaviour
     protected int maxPreyCount;
     [SerializeField] protected GameObject preyObject;
 
-    // Plane
-    [SerializeField] Collider preySpawnArea;
-    [SerializeField] Collider predatorSpawnArea;
+    // Predator
+    [SerializeField, ReadOnly] protected List<GameObject> spawnedPredator;
+    protected int initialPredatorCount;
+    protected int maxPredatorCount;
+    [SerializeField] protected GameObject predatorObject;
 
     // UI
     [SerializeField] Canvas startMenu;
     [SerializeField] Canvas overlay;
+    Overlay overlayController;
+    public float elapsedTime;
 
     private void Start()
     {
@@ -36,14 +40,22 @@ public class Simulation : MonoBehaviour
         startMenu.enabled = true;
         overlay.enabled = false;
         cameraController.LockCamera();
+        overlayController = overlay.GetComponent<Overlay>();
     }
 
-    public void SetStats(int initalPreyCount, int maxPreyCount, int initialFoodCount, int maxFoodCount, int foodPerSecond)
+    void Update()
+    {
+        elapsedTime += Time.deltaTime;
+    }
+
+    public void SetStats(int initalPreyCount, int maxPreyCount, int initialFoodCount, int maxFoodCount, int initialPredatorCount, int maxPredatorCount, int foodPerSecond)
     {
         this.initalPreyCount = initalPreyCount;
         this.maxPreyCount = maxPreyCount;
         this.initialFoodCount = initialFoodCount;
         this.maxFoodCount = maxFoodCount;
+        this.initialPredatorCount = initialPredatorCount;
+        this.maxPredatorCount = maxPredatorCount;
         this.foodPerSecond = foodPerSecond;
     }
 
@@ -63,6 +75,11 @@ public class Simulation : MonoBehaviour
         return spawnedPrey.Count;
     }
 
+    public int GetCurrentPredatorCount()
+    {
+        return spawnedPredator.Count;
+    }
+
     public void SpawnPrey(Vector3 localPosition, AgentController parentOne = null, AgentController parentTwo = null)
     {
         if (spawnedPrey.Count < maxPreyCount)
@@ -78,9 +95,29 @@ public class Simulation : MonoBehaviour
         }
     }
 
+    public void SpawnPredator(Vector3 localPosition, AgentController parentOne = null, AgentController parentTwo = null)
+    {
+        if (spawnedPredator.Count < maxPredatorCount)
+        {
+            GameObject predator = Instantiate(predatorObject, transform);
+            predator.transform.localPosition = localPosition;
+            spawnedPredator.Add(predator);
+
+            if (parentOne != null && parentTwo != null)
+            {
+                predator.GetComponent<AgentController>().Init(parentOne, parentTwo);
+            }
+        }
+    }
+
     public int GetMaxPreyCount()
     {
         return maxPreyCount;
+    }
+
+    public int GetMaxPredatorCount()
+    {
+        return maxPredatorCount;
     }
 
     public void DestroyPrey(GameObject prey)
@@ -89,8 +126,16 @@ public class Simulation : MonoBehaviour
         Destroy(prey);
     }
 
+    public void DestroyPredator(GameObject predator)
+    {
+        spawnedPredator.Remove(predator);
+        Destroy(predator);
+    }
+
     public void InitializeSimulation()
     {
+        elapsedTime = 0f;
+
         InvokeRepeating("SpawnFood", 1, 1);
 
         // Spawn initial food
@@ -101,11 +146,16 @@ public class Simulation : MonoBehaviour
             spawnedFood.Add(newFood);
         }
 
-
         // Spawn initial prey
         for (int i = 0; i < initalPreyCount && (GetCurrentPreyCount() < maxPreyCount || maxPreyCount < 0); i++)
         {
-            SpawnPrey(GetPreySpawnPosition());
+            SpawnPrey(GetRandomPosition());
+        }
+
+        // Spawn initial predator
+        for (int i = 0; i < initialPredatorCount && (GetCurrentPredatorCount() < maxPredatorCount || maxPredatorCount < 0); i++)
+        {
+            SpawnPredator(GetRandomPosition());
         }
 
         startMenu.enabled = false;
@@ -141,11 +191,18 @@ public class Simulation : MonoBehaviour
             float z = Random.Range(0, 300);
 
             // We don't want positions inside of the "Water Area"
-            if (z >= 100 && z <= 150) z = Random.Range(0, 100);
-            else if (z > 150 && z <= 200) z = Random.Range(201, 300);
+            if (x >= 100 && x <= 200 && z >= 100 && z <= 200)
+            {
+                if (x <= 150)
+                    x = Random.Range(0, 100);
+                else
+                    x = Random.Range(201, 300);
 
-            if (y >= 100 && y <= 150) y = Random.Range(0, 100);
-            else if (y > 150 && y <= 200) y = Random.Range(201, 300);
+                if (z <= 150)
+                    z = Random.Range(0, 100);
+                else
+                    z = Random.Range(201, 300);
+            }
 
             Vector3 randomPos = new Vector3(x, y, z);
             NavMeshHit hit;
@@ -156,28 +213,11 @@ public class Simulation : MonoBehaviour
             }
         }
 
-        return Random.value > 0.5f ? preySpawnArea.bounds.center : predatorSpawnArea.bounds.center;
+        return new Vector3(150, y, 50);
     }
 
-    public Vector3 GetPreySpawnPosition(float y = 1f)
+    public void AddTextToDialogue(string text)
     {
-        Bounds colliderBounds = preySpawnArea.bounds;
-
-        // Attempt 30 times max
-        for (int i = 0; i < 30; i++)
-        {
-            float x = Random.Range(colliderBounds.min.x, colliderBounds.max.x);
-            float z = Random.Range(colliderBounds.min.z, colliderBounds.max.z);
-
-            Vector3 randomPos = new Vector3(x, y, z);
-            NavMeshHit hit;
-
-            if (NavMesh.SamplePosition(randomPos, out hit, 150, NavMesh.AllAreas))
-            {
-                return hit.position;
-            }
-        }
-
-        return colliderBounds.center;
+        overlayController.AddTextToDialogue(text);
     }
 }
