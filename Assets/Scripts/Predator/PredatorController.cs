@@ -1,17 +1,17 @@
-using System;
 using UnityEngine;
 using UnityEngine.AI;
+using System;
 using Random = UnityEngine.Random;
 
-public class PreyController : AgentController
+class PredatorController : AgentController
 {
     void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Food")
+        if (other.tag == "Prey" && hunger < hungerThreshold)
         {
-            hunger = Math.Min(hunger + 10, 100); //todo change depending on matabolism
-            fov.foodInViewRadius.Remove(other.gameObject.transform);
-            simulation.DestroyFood(other.gameObject);
+            hunger = 100;
+            fov.preyInViewRadius.Remove(other.transform);
+            simulation.DestroyPrey(other.gameObject);
         }
     }
 
@@ -27,17 +27,17 @@ public class PreyController : AgentController
 
             if (NavMesh.SamplePosition(spawnPos, out hit, 5f, NavMesh.AllAreas))
             {
-                simulation.SpawnPrey(hit.position, this, mateController);
+                simulation.SpawnPredator(hit.position, this, mateController);
             }
             else
             {
-                simulation.SpawnPrey(transform.position, this, mateController);
+                simulation.SpawnPredator(transform.position, this, mateController);
             }
         }
     }
 
     protected override void Die()
     {
-        simulation.DestroyPrey(gameObject);
+        simulation.DestroyPredator(gameObject);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.AI;
 using Quaternion = UnityEngine.Quaternion;
@@ -44,6 +45,9 @@ public abstract class AgentController : MonoBehaviour
 
     // UI
     [field: SerializeField] protected AgentUIController agentUI;
+
+    public abstract void Reproduce(AgentController mateController);
+    protected abstract void Die();
 
     void Awake()
     {
@@ -106,6 +110,12 @@ public abstract class AgentController : MonoBehaviour
     {
         agentUI.UpdateHungerSlider(hunger);
         agentUI.UpdateThirstSlider(thirst);
+
+        if (hunger == 0 || thirst == 0)
+        {
+            Debug.Log($"{gameObject} died");
+            Die();
+        }
     }
 
     public bool IsHungry()
@@ -146,28 +156,33 @@ public abstract class AgentController : MonoBehaviour
     public void MoveToRandomPosition()
     {
         Vector3 newPosition = GetRandomPosition(transform.position, fov.radius);
-
-        Debug.DrawRay(newPosition, Vector3.up, Color.blue, 1.0f);
-        navMeshAgent.SetDestination(newPosition);
+        MoveToPosition(newPosition);
     }
 
     public void MoveToTarget(Transform target)
     {
-        // Debug.Log($"Moving to {target.position}");
-        Debug.DrawRay(target.position, Vector3.up, Color.green, 1f);
-        navMeshAgent.SetDestination(target.position);
+        if (target != null)
+        {
+            Vector3 newPosition = target.position;
+            MoveToPosition(newPosition);
+        }
     }
 
-    public void MoveToPosition(Vector3 position)
+    public void MoveToPosition(Vector3 newPosition)
     {
-        // Debug.Log($"Moving to {position}");
-        Debug.DrawRay(position, Vector3.up, Color.green, 1f);
-        navMeshAgent.SetDestination(position);
+        NavMeshHit hit;
+
+        if (NavMesh.SamplePosition(newPosition, out hit, 5.0f, NavMesh.AllAreas))
+        {
+            // Debug.Log($"Moving to {hit.position}");
+            Debug.DrawRay(hit.position, Vector3.up, Color.blue, 1.0f);
+            navMeshAgent.SetDestination(hit.position);
+        }
     }
 
     public void ResetPath()
     {
-        navMeshAgent.ResetPath();
+        if (navMeshAgent != null) navMeshAgent.ResetPath();
     }
 
     public void RotateTowardTarget(Transform target)
@@ -205,7 +220,6 @@ public abstract class AgentController : MonoBehaviour
     public IEnumerator MateRequest(AgentController other, Action<bool> onComplete)
     {
         // Debug.Log("Request Reveived");
-
         // thinking...
         yield return new WaitForSeconds(3f);
 
@@ -225,6 +239,24 @@ public abstract class AgentController : MonoBehaviour
         onComplete(roll <= chance);
     }
 
+    public void DrawLine(Vector3 from, Vector3 to, Color color)
+    {
+        GameObject line = new GameObject("MateRequestLine");
+        LineRenderer lineRenderer = line.AddComponent<LineRenderer>();
+
+        lineRenderer.positionCount = 2;
+        lineRenderer.SetPosition(0, from);
+        lineRenderer.SetPosition(1, to);
+
+        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        lineRenderer.startColor = color;
+        lineRenderer.endColor = color;
+        lineRenderer.startWidth = 1f;
+        lineRenderer.endWidth = 1f;
+
+        GameObject.Destroy(line, 2f);
+    }
+
     public bool IsMale()
     {
         return sex == Esex.MALE;
@@ -238,7 +270,7 @@ public abstract class AgentController : MonoBehaviour
 
     private float MutateStat(float stat, float min, float max, float mutationStrength = 1.2f, float totalMutationChance = 0.3f)
     {
-        Debug.Log("Check for mutation!");
+        // Debug.Log("Check for mutation!");
         float roll = Random.value;
 
         if (roll < totalMutationChance / 2)
@@ -253,27 +285,6 @@ public abstract class AgentController : MonoBehaviour
         }
 
         return Mathf.Clamp(stat, min, max);
-    }
-
-    public void Reproduce(AgentController mateController)
-    {
-        if (sex == Esex.FEMALE)
-        {
-            Vector3 offset = new Vector3(Random.Range(1, 5), 0, Random.Range(1, 5));
-
-            // Make sure the spawn position is on the NavMesh
-            NavMeshHit hit;
-            Vector3 spawnPos = transform.position + offset;
-
-            if (NavMesh.SamplePosition(spawnPos, out hit, 5f, NavMesh.AllAreas))
-            {
-                simulation.SpawnPrey(hit.position, this, mateController);
-            }
-            else
-            {
-                simulation.SpawnPrey(transform.position, this, mateController);
-            }
-        }
     }
 
     public IEnumerator ResetCanMate(float time = -1)

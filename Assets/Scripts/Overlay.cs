@@ -23,7 +23,7 @@ public class Overlay : MonoBehaviour
 
 
         preyCount.text = $"Prey Count: {simulation.GetCurrentPreyCount()}";
-        predatorCount.text = $"Predator Count: {0}";
+        predatorCount.text = $"Predator Count: {simulation.GetCurrentPredatorCount()}";
         foodCount.text = $"Food Count: {simulation.GetCurrentFoodCount()}";
         timeElapsed.text = $"Time Elapsed: {minutes:00}:{seconds:00}:{milliseconds:00}";
     }
