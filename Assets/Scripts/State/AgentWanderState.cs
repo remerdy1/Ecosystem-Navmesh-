@@ -25,6 +25,5 @@ public class AgentWanderState<T> : AbstractState<T> where T : Enum
 
     public override void ExitState()
     {
-        // Clean up if needed
     }
 }

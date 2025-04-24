@@ -43,7 +43,7 @@ class AgentMateState<T> : AbstractState<T> where T : Enum
                 isMating = true;
                 matingTimer = 0f;
 
-                agentController.RotateTowardTarget(mateController.transform);
+                // agentController.RotateTowardTarget(mateController.transform);
 
                 // Debug.Log($"{agentController.gameObject.name} starting mating process");
             }

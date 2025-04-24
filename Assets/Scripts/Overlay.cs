@@ -12,17 +12,13 @@ public class Overlay : MonoBehaviour
     [SerializeField] private Queue<string> textQueue = new Queue<string>();
     [SerializeField] private TMP_Text[] dialogueTMPText = new TMP_Text[6];
 
-    private float elapsedTime;
-
     [SerializeField] private Simulation simulation;
 
     void Update()
     {
-        elapsedTime += Time.deltaTime;
-
-        int minutes = Mathf.FloorToInt(elapsedTime / 60f);
-        int seconds = Mathf.FloorToInt(elapsedTime % 60f);
-        int milliseconds = Mathf.FloorToInt((elapsedTime * 100f) % 100);
+        int minutes = Mathf.FloorToInt(simulation.elapsedTime / 60f);
+        int seconds = Mathf.FloorToInt(simulation.elapsedTime % 60f);
+        int milliseconds = Mathf.FloorToInt((simulation.elapsedTime * 100f) % 100);
 
 
         preyCount.text = $"Prey Count: {simulation.GetCurrentPreyCount()}";

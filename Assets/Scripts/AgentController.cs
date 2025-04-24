@@ -340,7 +340,7 @@ public abstract class AgentController : MonoBehaviour
     {
         if (other.tag == "Water")
         {
-            Debug.Log("Entered Water");
+            // Debug.Log("Entered Water");
 
             time += Time.deltaTime;
             if (time >= 1)

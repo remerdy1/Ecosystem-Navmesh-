@@ -17,6 +17,8 @@ public class PredatorStateMachine : AbstractStateMachine<PredatorStateMachine.Pr
     AgentMateState<PredatorState> predatorMateState;
     AgentThirstyState<PredatorState> predatorThirstyState;
 
+    PredatorState priority = PredatorState.Hungry;
+
     private void Awake()
     {
         predatorController = GetComponent<PredatorController>();
@@ -42,13 +44,19 @@ public class PredatorStateMachine : AbstractStateMachine<PredatorStateMachine.Pr
         {
             return PredatorState.Mate;
         }
-        else if (predatorController.IsHungry())
+        else if (predatorController.IsHungry() && !predatorController.IsThirsty())
         {
+            priority = PredatorState.Hungry;
             return PredatorState.Hungry;
         }
-        else if (predatorController.IsThirsty())
+        else if (predatorController.IsThirsty() && !predatorController.IsHungry())
         {
+            priority = PredatorState.Thirsty;
             return PredatorState.Thirsty;
+        }
+        else if (predatorController.IsThirsty() && predatorController.IsHungry())
+        {
+            return priority;
         }
         else if (predatorController.CanMate() && predatorController.IsMale())
         {

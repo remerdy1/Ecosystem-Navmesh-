@@ -30,6 +30,7 @@ public class Simulation : MonoBehaviour
     [SerializeField] Canvas startMenu;
     [SerializeField] Canvas overlay;
     Overlay overlayController;
+    public float elapsedTime;
 
     private void Start()
     {
@@ -40,6 +41,11 @@ public class Simulation : MonoBehaviour
         overlay.enabled = false;
         cameraController.LockCamera();
         overlayController = overlay.GetComponent<Overlay>();
+    }
+
+    void Update()
+    {
+        elapsedTime += Time.deltaTime;
     }
 
     public void SetStats(int initalPreyCount, int maxPreyCount, int initialFoodCount, int maxFoodCount, int initialPredatorCount, int maxPredatorCount, int foodPerSecond)
@@ -122,12 +128,14 @@ public class Simulation : MonoBehaviour
 
     public void DestroyPredator(GameObject predator)
     {
-        spawnedPrey.Remove(predator);
+        spawnedPredator.Remove(predator);
         Destroy(predator);
     }
 
     public void InitializeSimulation()
     {
+        elapsedTime = 0f;
+
         InvokeRepeating("SpawnFood", 1, 1);
 
         // Spawn initial food
