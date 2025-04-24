@@ -21,6 +21,11 @@ class PredatorSearchForMateState : AbstractState<PredatorStateMachine.PredatorSt
 
     public override void UpdateState()
     {
+        if (predatorController.AtTarget())
+        {
+            predatorController.MoveToRandomPosition();
+        }
+
         if (potentialMate == null)
         {
             if (predatorController.fov.predatorsInViewRadius.Count > 0)
@@ -56,7 +61,7 @@ class PredatorSearchForMateState : AbstractState<PredatorStateMachine.PredatorSt
                             predatorController.SetMate(potentialMate);
                             predatorController.DrawLine(predatorController.transform.position, potentialMate.transform.position, Color.green);
                         }
-                        else if (potentialMateController == null)
+                        else if (potentialMateController != null)
                         {
                             predatorController.DrawLine(predatorController.transform.position, potentialMate.transform.position, Color.red);
                             predatorController.rejectionList.Add(potentialMate);
@@ -66,10 +71,6 @@ class PredatorSearchForMateState : AbstractState<PredatorStateMachine.PredatorSt
                         }
                     }));
                 }
-            }
-            else if (predatorController.AtTarget())
-            {
-                predatorController.MoveToRandomPosition();
             }
         }
     }

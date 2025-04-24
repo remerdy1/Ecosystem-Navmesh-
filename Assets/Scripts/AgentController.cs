@@ -11,6 +11,7 @@ using Vector3 = UnityEngine.Vector3;
 public abstract class AgentController : MonoBehaviour
 {
     [SerializeField] protected Simulation simulation;
+
     protected NavMeshAgent navMeshAgent;
     public FOV fov { get; protected set; }
     public List<Transform> rejectionList { get; private set; } = new List<Transform>(); //todo forget after x minutes
@@ -69,13 +70,13 @@ public abstract class AgentController : MonoBehaviour
         StartCoroutine(ResetCanMate(30)); // Can't mate for the first 30 seconds of spawning
         mate = null;
 
-        hungerDecreaseRate = Random.Range(0, 1f);
-        thirstDecreaseRate = Random.Range(0, 1f);
+        hungerDecreaseRate = Random.Range(1, 21) * 0.05f;
+        thirstDecreaseRate = Random.Range(1, 21) * 0.05f;
 
         InvokeRepeating("DecrementHunger", 1, 1);
         InvokeRepeating("DecrementThirst", 1, 1);
 
-        navMeshAgent.speed = Random.Range(2, 5f); //todo 
+        navMeshAgent.speed = Random.Range(2, 5f);
         fov.radius = Random.Range(13, 30f);
     }
 
@@ -111,9 +112,8 @@ public abstract class AgentController : MonoBehaviour
         agentUI.UpdateHungerSlider(hunger);
         agentUI.UpdateThirstSlider(thirst);
 
-        if (hunger == 0 || thirst == 0)
+        if (hunger <= 0 || thirst <= 0)
         {
-            Debug.Log($"{gameObject} died");
             Die();
         }
     }
@@ -254,7 +254,7 @@ public abstract class AgentController : MonoBehaviour
         lineRenderer.startWidth = 1f;
         lineRenderer.endWidth = 1f;
 
-        GameObject.Destroy(line, 2f);
+        GameObject.Destroy(line, 1f);
     }
 
     public bool IsMale()

@@ -9,9 +9,10 @@ class PredatorController : AgentController
     {
         if (other.tag == "Prey" && hunger < hungerThreshold)
         {
-            hunger = 100;
+            hunger = Math.Min(hunger + 30, 100);
             fov.preyInViewRadius.Remove(other.transform);
             simulation.DestroyPrey(other.gameObject);
+            simulation.AddTextToDialogue("A Prey has been eaten!");
         }
     }
 
@@ -33,11 +34,13 @@ class PredatorController : AgentController
             {
                 simulation.SpawnPredator(transform.position, this, mateController);
             }
+            simulation.AddTextToDialogue("A new Predator is born!");
         }
     }
 
     protected override void Die()
     {
         simulation.DestroyPredator(gameObject);
+        simulation.AddTextToDialogue($"A Predator has died!");
     }
 }

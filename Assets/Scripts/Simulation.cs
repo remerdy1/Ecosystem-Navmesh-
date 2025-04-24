@@ -29,6 +29,7 @@ public class Simulation : MonoBehaviour
     // UI
     [SerializeField] Canvas startMenu;
     [SerializeField] Canvas overlay;
+    Overlay overlayController;
 
     private void Start()
     {
@@ -38,6 +39,7 @@ public class Simulation : MonoBehaviour
         startMenu.enabled = true;
         overlay.enabled = false;
         cameraController.LockCamera();
+        overlayController = overlay.GetComponent<Overlay>();
     }
 
     public void SetStats(int initalPreyCount, int maxPreyCount, int initialFoodCount, int maxFoodCount, int initialPredatorCount, int maxPredatorCount, int foodPerSecond)
@@ -181,8 +183,18 @@ public class Simulation : MonoBehaviour
             float z = Random.Range(0, 300);
 
             // We don't want positions inside of the "Water Area"
-            if (x >= 100 && x <= 150) x = Random.Range(0, 100);
-            else if (x > 150 && x <= 200) x = Random.Range(201, 300);
+            if (x >= 100 && x <= 200 && z >= 100 && z <= 200)
+            {
+                if (x <= 150)
+                    x = Random.Range(0, 100);
+                else
+                    x = Random.Range(201, 300);
+
+                if (z <= 150)
+                    z = Random.Range(0, 100);
+                else
+                    z = Random.Range(201, 300);
+            }
 
             Vector3 randomPos = new Vector3(x, y, z);
             NavMeshHit hit;
@@ -194,5 +206,10 @@ public class Simulation : MonoBehaviour
         }
 
         return new Vector3(150, y, 50);
+    }
+
+    public void AddTextToDialogue(string text)
+    {
+        overlayController.AddTextToDialogue(text);
     }
 }

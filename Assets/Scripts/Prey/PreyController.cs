@@ -33,11 +33,14 @@ public class PreyController : AgentController
             {
                 simulation.SpawnPrey(transform.position, this, mateController);
             }
+
+            simulation.AddTextToDialogue("A new Prey is born!");
         }
     }
 
     protected override void Die()
     {
         simulation.DestroyPrey(gameObject);
+        simulation.AddTextToDialogue($"A Prey has died!");
     }
 }

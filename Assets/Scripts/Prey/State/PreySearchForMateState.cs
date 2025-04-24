@@ -21,6 +21,11 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
 
     public override void UpdateState()
     {
+        if (preyController.AtTarget())
+        {
+            preyController.MoveToRandomPosition();
+        }
+
         if (potentialMate == null)
         {
             if (preyController.fov.preyInViewRadius.Count > 0)
@@ -47,7 +52,6 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
                 {
                     // male makes request to female 
                     // Debug.Log($"Making Request to {potentialMateController}");
-
                     preyController.StartCoroutine(potentialMateController.MateRequest(preyController, (success) =>
                     {
                         // Debug.Log($"Request Made - Result: {success}");
@@ -68,10 +72,6 @@ class PreySearchForMateState : AbstractState<PreyStateMachine.PreyState>
                     }));
                 }
             }
-        }
-        else if (preyController.AtTarget())
-        {
-            preyController.MoveToRandomPosition();
         }
     }
 
