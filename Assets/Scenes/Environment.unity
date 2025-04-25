@@ -738,6 +738,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Environment
       objectReference: {fileID: 0}
+    - target: {fileID: 1816615567868208735, guid: 3e1ef4d65be7ca04b973d27a72a58781, type: 3}
+      propertyPath: m_TagString
+      value: Environment
+      objectReference: {fileID: 0}
     - target: {fileID: 2414472950908674488, guid: 3e1ef4d65be7ca04b973d27a72a58781, type: 3}
       propertyPath: m_Extents.x
       value: 3.3

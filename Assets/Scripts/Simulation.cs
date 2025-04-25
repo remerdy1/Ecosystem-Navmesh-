@@ -120,6 +120,11 @@ public class Simulation : MonoBehaviour
         return maxPredatorCount;
     }
 
+    public int GetMaxFoodCount()
+    {
+        return maxFoodCount;
+    }
+
     public void DestroyPrey(GameObject prey)
     {
         spawnedPrey.Remove(prey);
@@ -205,11 +210,12 @@ public class Simulation : MonoBehaviour
             }
 
             Vector3 randomPos = new Vector3(x, y, z);
+
             NavMeshHit hit;
 
-            if (NavMesh.SamplePosition(randomPos, out hit, 150, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(randomPos, out hit, 1, NavMesh.AllAreas))
             {
-                return hit.position;
+                return new Vector3(hit.position.x, y, hit.position.z);
             }
         }
 
