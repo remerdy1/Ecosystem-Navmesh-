@@ -8,6 +8,7 @@ TagManager:
   - Prey
   - Predator
   - Water
+  - Environment
   layers:
   - Default
   - TransparentFX

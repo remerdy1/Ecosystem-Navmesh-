@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.AI;
 using Quaternion = UnityEngine.Quaternion;
@@ -26,21 +25,21 @@ public abstract class AgentController : MonoBehaviour
     }
 
     // Stats
-    [field: SerializeField] protected float hunger;
-    [field: SerializeField] protected float thirst;
+    [field: SerializeField] public float hunger { get; protected set; }
+    [field: SerializeField] public float thirst { get; protected set; }
 
-    [field: SerializeField] protected float hungerDecreaseRate;
-    [field: SerializeField] protected float thirstDecreaseRate;
+    [field: SerializeField] public float hungerDecreaseRate { get; protected set; }
+    [field: SerializeField] public float thirstDecreaseRate { get; protected set; }
 
-    [field: SerializeField] protected float hungerThreshold;
-    [field: SerializeField] protected float thirstThreshold;
+    [field: SerializeField] public float hungerThreshold { get; protected set; }
+    [field: SerializeField] public float thirstThreshold { get; protected set; }
 
     [field: SerializeField] protected float rotationSpeed = 1f;
 
     // Reproduction
     [field: SerializeField] public Esex sex { get; private set; }
     [field: SerializeField] public float attractiveness { get; private set; }
-    [field: SerializeField] protected bool canMate;
+    [field: SerializeField] public bool canMate { get; protected set; }
     [field: SerializeField] protected float canMateResetTimer;
     [field: SerializeField] protected Transform mate;
 
