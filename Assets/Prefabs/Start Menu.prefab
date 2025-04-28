@@ -1496,15 +1496,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cceebe13e00e38645b596fa07fa61d4b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultInitialFood: 10
-  defaultMaxPrey: 50
-  defaultInitialPrey: 7
-  defaultMaxFood: 100
   simulation: {fileID: 0}
   initialPreyCount: {fileID: 2972849081790977214}
   maxPreyCount: {fileID: 8075943186487338632}
+  initialPredatorCount: {fileID: 2051890482018745567}
+  maxPredatorCount: {fileID: 4729782442037967157}
   initialFoodCount: {fileID: 7351929778053465479}
   maxFoodCount: {fileID: 2314464090000412258}
+  sliderText: {fileID: 8621646270132679419}
   foodPerSecond: {fileID: 4269996937698110872}
 --- !u!1 &1966846408265663280
 GameObject:
@@ -4925,7 +4924,19 @@ MonoBehaviour:
   m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 9111997391166036274}
+        m_TargetAssemblyTypeName: StartMenu, Assembly-CSharp
+        m_MethodName: UpdateSliderText
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &8070007815539610810
 GameObject:
   m_ObjectHideFlags: 0
